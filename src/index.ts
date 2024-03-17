@@ -1,7 +1,7 @@
 import {bot, redisClient} from "@app"
-import {Middleware, session} from "telegraf"
-import {stage} from "@/commands/login.ts"
+import {Middleware, Scenes, session} from "telegraf"
 import {Stage} from "telegraf/scenes"
+import {LoginContext, loginScene} from "@/commands/login.ts"
 
 bot.start(async (ctx) => {
     await ctx.replyWithMarkdownV2(`
@@ -13,6 +13,10 @@ bot.start(async (ctx) => {
 `)
 })
 
+const stage = new Scenes.Stage<LoginContext>([loginScene])
+
+bot.use(session())
+bot.use(stage.middleware())
 
 bot.command('login', async (ctx) => {
     const user_exists = await redisClient.exists(ctx.chat.id.toString())
@@ -24,8 +28,6 @@ bot.command('login', async (ctx) => {
         `)
     }
     else {
-        bot.use(session())
-        bot.use(stage.middleware())
         Stage.action("redo", stage.middleware() as Middleware<any>)
     }
 })

@@ -1,23 +1,15 @@
-version: '3.9'
+version: '3.8'
 
 services:
-  vista_mongo:
-    container_name: vista_mongo
-    restart: on-failure
-    dns:
-      - 178.22.122.100
-      - 185.51.200.2
-    image: mongo:latest
+  vista_redis_stack:
+    image: redis/redis-stack:latest
+    container_name: vista_redis_stack
+    ports:
+      - "8003:8001"
+      - "6380:6379"
     volumes:
-      - vista-mongo-volume
-
-  app:
-    container_name: app
-    image: node:20
-    command: 'nodemon'
-    depends_on:
-      - vista_mongo
+      - vista-redis-volume
 
 volumes:
-  vista-mongo-volume:
+  vista-redis-volume:
     external: true

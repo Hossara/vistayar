@@ -4,8 +4,10 @@ import {Context, Telegraf} from "telegraf"
 import {Message, Update } from "telegraf/typings/core/types/typegram"
 import {CommandContextExtn} from "telegraf/typings/telegram-types"
 import {createClient} from "redis"
-import { initializeApp } from "firebase/app"
-import { getFirestore } from "firebase/firestore"
+import {initializeApp, ServiceAccount, cert} from 'firebase-admin/app'
+import {getFirestore} from 'firebase-admin/firestore'
+import {WizardContext} from "telegraf/scenes"
+import credential from "../db_info.json"
 
 dotenv.config()
 export const env = {
@@ -22,6 +24,7 @@ export const env = {
     FIREBASE_storageBucket: string,
     FIREBASE_messagingSenderId: string,
     FIREBASE_appId: string,
+    FIREBASE_ADMIN_DATABASE: string
 }
 
 export const isDev: boolean = env.IS_DEV === 'TRUE'
@@ -34,18 +37,12 @@ export const bot = new Telegraf(env.BOT_TOKEN, {
     }
 })
 
-const firebaseConfig = {
-    apiKey: env.FIREBASE_apiKey,
-    authDomain: env.FIREBASE_authDomain,
-    projectId: env.FIREBASE_projectId,
-    storageBucket: env.FIREBASE_storageBucket,
-    messagingSenderId: env.FIREBASE_messagingSenderId,
-    appId: env.FIREBASE_appId
-}
-
 // Initialize Firebase
-export const firebase = getFirestore(initializeApp(firebaseConfig))
-
+export const firebase = getFirestore(initializeApp({
+    credential: cert(credential as ServiceAccount, proxy),
+    databaseURL: env.FIREBASE_ADMIN_DATABASE,
+    httpAgent: proxy
+}))
 
 // Initialize redis client
 export const redisClient = createClient({
@@ -62,7 +59,7 @@ redisClient.connect()
 export type CommandContext =  Context<{
     message: Update.New & Update.NonChannel & Message.TextMessage,
     update_id: number
-}> & Omit<Context<Update>, keyof Context<any>> & CommandContextExtn
+}> & Omit<WizardContext, keyof Context<any>> & CommandContextExtn
 
 bot.telegram.setMyCommands([
     {command: "login", description: "ورود به حساب"},

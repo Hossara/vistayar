@@ -1,9 +1,7 @@
 import {Composer, Scenes} from "telegraf"
-import {redisClient} from "@app"
+import {getInputText, redisClient, regexes} from "@app"
 import {userConverter} from "@/schemas/User.ts"
 import {searchByUsernameAndPassword} from "@/services/user.service.ts"
-
-const regex = /^[a-zA-Z\s\u0600-\u06FF]{2,30}$/
 
 interface LoginSession extends Scenes.WizardSessionData {
     username: string
@@ -12,11 +10,6 @@ interface LoginSession extends Scenes.WizardSessionData {
 
 export type LoginContext = Scenes.WizardContext<LoginSession>
 
-const getInputText = (text: string) => text
-    .trim()
-    .replace("http://", '')
-    .replace("https://", '')
-    .replace("file://", '')
 
 // Scene registration
 export const loginScene = new Scenes.WizardScene<LoginContext>('login',
@@ -25,7 +18,7 @@ export const loginScene = new Scenes.WizardScene<LoginContext>('login',
         return ctx.wizard.next()
     },
     async (ctx, next) => {
-        if (!regex.test(ctx.text) || ctx.text[0] === '/' || ctx.text.length < 3 || ctx.text.length > 30) {
+        if (!regexes.safe_text.test(ctx.text) || ctx.text[0] === '/' || ctx.text.length < 3 || ctx.text.length > 30) {
             await ctx.reply("لطفا نام کاربری معتبر وارد کنید!")
             ctx.wizard.back()
             return Composer.unwrap(ctx.wizard.step)(ctx, next)

@@ -37,6 +37,18 @@ export const bot = new Telegraf(env.BOT_TOKEN, {
     }
 })
 
+export const regexes = {
+    safe_text: /^[a-zA-Z\s\u0600-\u06FF]{2,30}$/,
+    time: /^(\d+h)?(\d+m)?$/,
+    number: /^[\u06F0-\u06F90-9]*$/
+}
+
+export const getInputText = (text: string) => text
+    .trim()
+    .replace("http://", '')
+    .replace("https://", '')
+    .replace("file://", '')
+
 // Initialize Firebase
 export const firebase = getFirestore(initializeApp({
     credential: cert(credential as ServiceAccount, proxy),

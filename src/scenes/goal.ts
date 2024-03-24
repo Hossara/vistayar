@@ -1,12 +1,14 @@
 import {Composer, Scenes} from "telegraf"
 import {getInputText, redisClient, regexes} from "@app"
-import {loginScene} from "@/scenes/login.ts"
-import {insertGoal} from "@/services/goal.service.ts"
+import {insertGoal, updateGoal} from "@/services/goal.service.ts"
 import {Goal} from "@/schemas/Goal.ts"
 
-interface GoalSession extends Scenes.WizardSessionData {
+export interface GoalSession extends Scenes.WizardSessionData {
     time: number,
-    test_count: number
+    test_count: number,
+    state: {
+        is_update: boolean
+    }
 }
 
 export type GoalContext = Scenes.WizardContext<GoalSession>
@@ -73,7 +75,9 @@ export const goalScene = new Scenes.WizardScene<GoalContext>('goal',
         const user_cache = await redisClient.hGetAll(ctx.chat.id.toString())
 
         try {
-            await insertGoal(new Goal(null, user_cache.id, session.test_count, session.time, []))
+            if (session.state.is_update) await updateGoal(user_cache.id, {test_count: session.test_count, time: session.time})
+            else await insertGoal(new Goal(user_cache.id, session.test_count, session.time, []))
+
             await ctx.reply("هدف شما ثبت شد. شما میتوانید با دستور /insert_report تعداد ساعت مطالعه هر روز را ثبت کنید.")
 
             ctx.wizard.selectStep(0)

@@ -54,7 +54,7 @@ bot.command('logout', async (ctx) => {
 
 bot.command('where_am_i', (ctx) => ctx.reply('Hello'))
 bot.command('need_to_talk', (ctx) => ctx.reply('Hello'))
-bot.command('edit_point', (ctx) => ctx.reply('Hello'))
+bot.command('edit_point', async (ctx: CommandContext) => await ctx.scene.enter("goal", {is_update: true}))
 
 bot.launch()
 

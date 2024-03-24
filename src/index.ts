@@ -5,7 +5,6 @@ import {loginScene} from "@/scenes/login.ts"
 import {userConverter} from "@/schemas/User.ts"
 import {findById} from "@/services/user.service.ts"
 import {goalScene} from "@/scenes/goal.ts"
-import {findGoalByUser} from "@/services/goal.service.ts"
 
 bot.start(async (ctx) => {
     await ctx.replyWithMarkdownV2(`
@@ -27,18 +26,17 @@ bot.command('login', async (ctx: CommandContext) => {
 
     if (user_cache) {
         const user = await findById(user_cache.id)
+        if (user) {
+            await redisClient.del(user_cache.id)
+            await ctx.scene.enter("login")
+        }
 
-        await ctx.reply(`
+        else await ctx.reply(`
 ${userConverter.fromFirestore(user).first_name} عزیز شما قبلا وارد شدید!
 برای خروج از حساب از دستور /logout استفاده کنید.
         `)
     }
     else await ctx.scene.enter("login")
-
-    const goal = await findGoalByUser(user_cache.id)
-
-    if (!goal.docs[0] || !goal.docs[0].exists)
-        await  ctx.scene.enter("goal")
 })
 
 bot.command('logout', async (ctx) => {

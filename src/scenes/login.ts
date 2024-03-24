@@ -2,6 +2,7 @@ import {Composer, Scenes} from "telegraf"
 import {getInputText, redisClient, regexes} from "@app"
 import {userConverter} from "@/schemas/User.ts"
 import {searchByUsernameAndPassword} from "@/services/user.service.ts"
+import {findGoalByUser} from "@/services/goal.service.ts"
 
 interface LoginSession extends Scenes.WizardSessionData {
     username: string
@@ -75,7 +76,11 @@ export const loginScene = new Scenes.WizardScene<LoginContext>('login',
 
         await ctx.reply(`${user_data.first_name} عزیز شما با موفقیت وارد شدید!`)
 
-        return ctx.scene.leave()
+        await ctx.scene.leave()
+
+        const goal = await findGoalByUser(user_data.getId())
+
+        if (!goal.exists) await ctx.scene.enter("goal")
     },
 )
 

@@ -9,14 +9,12 @@ export type Report = {
 
 export class Goal implements DocumentData {
     private readonly id: string
-    public user: string
     public test_count: number
     public reading_time: number
     public reports: Report[]
 
-    constructor(id: string | null, user: string, test_count: number, reading_time: number, reports: Report[]) {
+    constructor(id: string | null, test_count: number, reading_time: number, reports: Report[]) {
         this.id = id ?? uuidv4()
-        this.user = user
         this.test_count = test_count
         this.reading_time = reading_time
         this.reports = reports
@@ -29,7 +27,6 @@ export class Goal implements DocumentData {
 
 export const goalConverter = {
     toFirestore: (goal: Goal) => ({
-        user: goal.user,
         test_count: goal.test_count,
         reading_time: goal.reading_time,
         reports: goal.reports,
@@ -39,7 +36,6 @@ export const goalConverter = {
 
         return new Goal(
             snapshot.id,
-            data['user'],
             data['test_count'],
             data['reading_time'],
             data['reports'],

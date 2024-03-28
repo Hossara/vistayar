@@ -2,12 +2,14 @@ import {Composer, Scenes} from "telegraf"
 import {getInputText, redisClient, regexes} from "@app"
 import {insertGoal, updateGoal} from "@/services/goal.service.ts"
 import {Goal} from "@/schemas/Goal.ts"
+import {insertReportByUser} from "@/services/report.service.ts"
 
 export interface GoalSession extends Scenes.WizardSessionData {
     time: number,
     test_count: number,
     state: {
-        is_update: boolean
+        is_update: boolean,
+        is_report: boolean
     }
 }
 
@@ -16,7 +18,7 @@ export type GoalContext = Scenes.WizardContext<GoalSession>
 export const goalScene = new Scenes.WizardScene<GoalContext>('goal',
     async (ctx) => {
         await ctx.reply(`
-لطفا تعداد ساعت مطالعه هدف خود را در هفته با فرمت زیر وارد کنید. برای مثال:
+لطفا تعداد ساعت مطالعه ${ctx.scene.session.state.is_report ? 'امروز خود را' : 'هدف خود را در هفته'} با فرمت زیر وارد کنید. برای مثال:
 1h معادل ۱ ساعت
 25m معادل ۲۵ دقیقه
 1h25m معادل ۱ ساعت و ۲۵ دقیقه
@@ -48,7 +50,7 @@ export const goalScene = new Scenes.WizardScene<GoalContext>('goal',
     },
     async (ctx) => {
         await ctx.reply(`
-لطفا تعداد تست هدف خود را در هفته به صورت عدد انگلیسی وارد کنید. برای مثال:
+لطفا تعداد تست ${ctx.scene.session.state.is_report ? 'امروز را' : 'هدف خود را در هفته'} به صورت عدد انگلیسی وارد کنید. برای مثال:
 25
 53
 124
@@ -70,15 +72,28 @@ export const goalScene = new Scenes.WizardScene<GoalContext>('goal',
         ctx.wizard.next()
         return Composer.unwrap(ctx.wizard.step)(ctx, next)
     },
-    async (ctx, next) => {
+    async (ctx) => {
         const session = ctx.scene.session
         const user_cache = await redisClient.hGetAll(ctx.chat.id.toString())
 
-        try {
-            if (session.state.is_update) await updateGoal(user_cache.id, {test_count: session.test_count, time: session.time})
-            else await insertGoal(new Goal(user_cache.id, session.test_count, session.time, []))
+        await ctx.reply("درحال بررسی و ثبت اطلاعات...")
 
-            await ctx.reply("هدف شما ثبت شد. شما میتوانید با دستور /insert_report تعداد ساعت مطالعه هر روز را ثبت کنید.")
+        try {
+            if (session.state.is_report) {
+                await insertReportByUser(user_cache.id, {
+                    test_count: session.test_count,
+                    reading_time: session.time,
+                    date: new Date()
+                })
+
+                await ctx.reply("گزارش روزانه شما ثبت شد.")
+            }
+            else {
+                if (session.state.is_update) await updateGoal(user_cache.id, {test_count: session.test_count, time: session.time})
+                else await insertGoal(new Goal(user_cache.id, session.test_count, session.time, []))
+
+                await ctx.reply("هدف شما ثبت شد. شما میتوانید با دستور /insert_report تعداد ساعت مطالعه هر روز را ثبت کنید.")
+            }
 
             ctx.wizard.selectStep(0)
             ctx.scene.reset()

@@ -77,7 +77,15 @@ bot.command('insert_goal', async (ctx: CommandContext) => {
 
 bot.command('where_am_i', (ctx) => ctx.reply('Hello'))
 bot.command('need_to_talk', (ctx) => ctx.reply('Hello'))
-bot.command('edit_point', async (ctx: CommandContext) => await ctx.scene.enter("goal", {is_update: true}))
+
+bot.command('edit_goal', async (ctx: CommandContext) => {
+    const user_cache = await redisClient.hGetAll(ctx.chat.id.toString())
+
+    const goal = await findGoalByUser(user_cache.id)
+
+    if (!goal.exists) await ctx.scene.enter("goal")
+    else await ctx.scene.enter("goal", {is_update: true})
+})
 
 bot.launch()
 

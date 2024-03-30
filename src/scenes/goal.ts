@@ -1,8 +1,8 @@
 import {Composer, Scenes} from "telegraf"
 import {getInputText, redisClient, regexes} from "@app"
 import {insertGoal, updateGoal} from "@/services/goal.service.ts"
-import {Goal} from "@/schemas/Goal.ts"
-import {insertReportByUser} from "@/services/report.service.ts"
+import {Goal, Reports} from "@/schemas/Goal.ts"
+import moment from "moment/moment"
 
 export interface GoalSession extends Scenes.WizardSessionData {
     time: number,
@@ -80,17 +80,24 @@ export const goalScene = new Scenes.WizardScene<GoalContext>('goal',
 
         try {
             if (session.state.is_report) {
-                await insertReportByUser(user_cache.id, {
+                const today = moment().format("dddd").toLowerCase() as keyof Reports
+
+                let report = {
+                    reports: {}
+                } as {reports: Reports}
+
+                report.reports[today] = {
                     test_count: session.test_count,
-                    reading_time: session.time,
-                    date: new Date()
-                })
+                    reading_time: session.time
+                }
+
+                await updateGoal(user_cache.id, report)
 
                 await ctx.reply("گزارش روزانه شما ثبت شد.")
             }
             else {
                 if (session.state.is_update) await updateGoal(user_cache.id, {test_count: session.test_count, time: session.time})
-                else await insertGoal(new Goal(user_cache.id, session.test_count, session.time, []))
+                else await insertGoal(new Goal(user_cache.id, session.test_count, session.time, null))
 
                 await ctx.reply("هدف شما ثبت شد. شما میتوانید با دستور /insert_report تعداد ساعت مطالعه هر روز را ثبت کنید.")
             }
@@ -106,7 +113,7 @@ export const goalScene = new Scenes.WizardScene<GoalContext>('goal',
 )
 
 goalScene.hears("خروج", async (ctx) => {
-    await ctx.reply("شما از فرایند ورود خارج شدید")
+    await ctx.reply("شما از فرایند خارج شدید")
 
     ctx.wizard.selectStep(0)
 

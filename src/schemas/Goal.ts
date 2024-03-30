@@ -2,22 +2,39 @@ import {v4 as uuidv4} from "uuid"
 import {DocumentData, QueryDocumentSnapshot, DocumentSnapshot} from "firebase-admin/firestore"
 
 export type Report = {
-    date: Date
     test_count: number
     reading_time: number
+}
+
+export type Reports = {
+    saturday?: Report | null,
+    sunday?:  Report | null,
+    monday?: Report | null,
+    tuesday?: Report | null,
+    wednesday?: Report | null,
+    thursday?: Report | null,
+    friday?: Report | null
 }
 
 export class Goal implements DocumentData {
     private readonly id: string
     public test_count: number
     public reading_time: number
-    public reports: Report[]
+    public reports: Reports
 
-    constructor(id: string | null, test_count: number, reading_time: number, reports: Report[]) {
+    constructor(id: string | null, test_count: number, reading_time: number, reports: Reports | null) {
         this.id = id ?? uuidv4()
         this.test_count = test_count
         this.reading_time = reading_time
-        this.reports = reports
+        this.reports = reports ?? {
+            saturday: null,
+            sunday:  null,
+            monday: null,
+            tuesday: null,
+            wednesday: null,
+            thursday: null,
+            friday: null
+        }
     }
 
     getId() {

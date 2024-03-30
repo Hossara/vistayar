@@ -9,6 +9,7 @@ import cron from "node-cron"
 import moment from "moment"
 import {iterateRedisKeys} from "@/functions.ts"
 import {findGoalByUser} from "@/services/goal.service.ts"
+import {goalConverter, Reports} from "@/schemas/Goal.ts"
 
 bot.start(async (ctx) => {
     await ctx.replyWithMarkdownV2(`
@@ -60,9 +61,15 @@ bot.command('insert_report', async (ctx: CommandContext) => {
     const user_cache = await redisClient.hGetAll(ctx.chat.id.toString())
 
     const goal = await findGoalByUser(user_cache.id)
+    const today = moment().format("dddd").toLowerCase() as keyof Reports
 
     if (!goal.exists) await ctx.reply("شما هنوز هدفی برای این هفته ثبت نکردید. لطفا از طریق دستور /insert_goal هدف خود را ثبت کنید.")
-    else await ctx.scene.enter("goal", {is_report: true})
+    else {
+        if (goalConverter.fromFirestore(goal).reports[today])
+            await ctx.replyWithHTML("شما قبلا برای امروز گزارش خود را ثبت کرده اید. با ادامه فرایند شما گزارش امروز را ویرایش میکنید و اگر قصد خروج از فرایند ثبت مجدد گزارش را دارید، <u>خروج</u> را ارسال کنید")
+
+        await ctx.scene.enter("goal", {is_report: true})
+    }
 })
 
 bot.command('insert_goal', async (ctx: CommandContext) => {
@@ -73,7 +80,6 @@ bot.command('insert_goal', async (ctx: CommandContext) => {
     if (goal.exists) await ctx.reply("شما قبلا هدف خود را ثبت کرده اید. برای ویرایش آن از طریق دستور /edit_goal اقدام کنید.")
     else await ctx.scene.enter("goal")
 })
-
 
 bot.command('where_am_i', (ctx) => ctx.reply('Hello'))
 bot.command('need_to_talk', (ctx) => ctx.reply('Hello'))

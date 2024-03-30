@@ -76,7 +76,7 @@ export type CommandContext =  Context<{
 bot.telegram.setMyCommands([
     {command: "login", description: "ورود به حساب"},
     {command: "logout", description: "خروج از حساب"},
-    {command: "insert_goal", description: "ثبت هدف هفته"},
+    {command: "insert_goal", description: "ثبت  یا ویرایش هدف هفته"},
     {command: "edit_goal", description: "ویرایش هدف هفته"},
     {command: "insert_report", description: "ثبت گزارش روزانه"},
     {command: "where_am_i", description: "کجای مسیرم؟"},

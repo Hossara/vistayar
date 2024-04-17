@@ -15,12 +15,12 @@ export type LoginContext = Scenes.WizardContext<LoginSession>
 // Scene registration
 export const loginScene = new Scenes.WizardScene<LoginContext>('login',
     async (ctx) => {
-        await ctx.reply("لطفا نام کاربری خود را وارد کنید:")
+        await ctx.reply("برای ورود به بات، نام کاربری‌ خودت رو وارد کن:")
         return ctx.wizard.next()
     },
     async (ctx, next) => {
         if (!regexes.safe_text.test(ctx.text) || ctx.text[0] === '/' || ctx.text.length < 3 || ctx.text.length > 30) {
-            await ctx.reply("لطفا نام کاربری معتبر وارد کنید!")
+            await ctx.reply("نام کاربریت معتبر نبود!")
             ctx.wizard.back()
             return Composer.unwrap(ctx.wizard.step)(ctx, next)
         }
@@ -30,12 +30,12 @@ export const loginScene = new Scenes.WizardScene<LoginContext>('login',
         return Composer.unwrap(ctx.wizard.step)(ctx, next)
     },
     async (ctx) => {
-        await ctx.reply("لطفا رمز عبور خود را وارد کنید:")
+        await ctx.reply("حالا رمز عبورت رو وارد کن:")
         return ctx.wizard.next()
     },
     async (ctx, next) => {
         if (ctx.text[0] === '/' || ctx.text.length < 3 || ctx.text.length > 50) {
-            await ctx.reply("لطفا رمز عبور معتبر وارد کنید!")
+            await ctx.reply("رمز عبورت معتبر نبود!")
             ctx.wizard.back()
             return Composer.unwrap(ctx.wizard.step)(ctx, next)
         }
@@ -74,7 +74,7 @@ export const loginScene = new Scenes.WizardScene<LoginContext>('login',
         ctx.wizard.selectStep(0)
         ctx.scene.reset()
 
-        await ctx.reply(`${user_data.first_name} عزیز شما با موفقیت وارد شدید!`)
+        await ctx.reply(`${user_data.first_name} عزیز، خوش اومدی!`)
 
         await ctx.scene.leave()
 
@@ -85,7 +85,7 @@ export const loginScene = new Scenes.WizardScene<LoginContext>('login',
 )
 
 loginScene.hears("خروج", async (ctx) => {
-    await ctx.reply("شما از فرایند ورود خارج شدید")
+    await ctx.reply("از فرایند خارج شدی✋🏻")
 
     ctx.wizard.selectStep(0)
 

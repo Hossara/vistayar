@@ -3,7 +3,7 @@ import {Scenes, session} from "telegraf"
 import {WizardContext} from "telegraf/scenes"
 import {loginScene} from "@/scenes/login.ts"
 import {userConverter} from "@/schemas/User.ts"
-import {findById} from "@/services/user.service.ts"
+import {findUserById} from "@/services/user.service.ts"
 import {goalScene} from "@/scenes/goal.ts"
 import cron from "node-cron"
 import moment from "moment"
@@ -29,8 +29,9 @@ bot.use(stage.middleware())
 bot.command('login', async (ctx: CommandContext) => {
     const user_cache = await redisClient.hGetAll(ctx.chat.id.toString())
 
-    if (user_cache) {
-        const user = await findById(user_cache.id)
+    if (!(user_cache === null || Object.keys(user_cache).length === 0)) {
+        const user = await findUserById(user_cache.id)
+
         if (user) {
             await redisClient.del(user_cache.id)
             await ctx.scene.enter("login")
@@ -50,9 +51,8 @@ bot.command('logout', async (ctx) => {
     if (user_exists) {
         await redisClient.del(ctx.chat.id.toString())
         await ctx.reply(`
-        شما با موفیت از حساب خود خارج شدید.
-        برای ورود مجدد از دستور /login استفاده کنید.
-        `)
+با موفقیت از حسابت خارج شدی، منتظر برگشتنت هستم! با کلید /login میتونی مجدد مسیرتو باهام شروع کنی!
+`)
     }
     else await ctx.reply("شما در حساب خود وارد نشده اید. برای ورود به حساب از دستور /login استفاده نمایید.")
 })
@@ -66,7 +66,8 @@ bot.command('insert_report', async (ctx: CommandContext) => {
     if (!goal.exists) await ctx.reply("شما هنوز هدفی برای این هفته ثبت نکردید. لطفا از طریق دستور /insert_goal هدف خود را ثبت کنید.")
     else {
         if (goalConverter.fromFirestore(goal).reports[today])
-            await ctx.replyWithHTML("شما قبلا برای امروز گزارش خود را ثبت کرده اید. با ادامه فرایند شما گزارش امروز را ویرایش میکنید و اگر قصد خروج از فرایند ثبت مجدد گزارش را دارید، <u>خروج</u> را ارسال کنید")
+            await ctx.replyWithHTML("قبلا برای امروز گزارشت رو ثبت کردی!" +
+                "با ادامه فرایند و ورود عدد جدید، گزارش امروز ویرایش میشه. ولی اگر قصد خروج از این فرایند رو داری، کلمه <u>خروج</u> رو بفرست.")
 
         await ctx.scene.enter("goal", {is_report: true})
     }
@@ -77,7 +78,7 @@ bot.command('insert_goal', async (ctx: CommandContext) => {
 
     const goal = await findGoalByUser(user_cache.id)
 
-    if (goal.exists) await ctx.reply("شما قبلا هدف خود را ثبت کرده اید. برای ویرایش آن از طریق دستور /edit_goal اقدام کنید.")
+    if (goal.exists) await ctx.reply("قبلا هدف این هفته رو وارد کردی؛ برای ویرایش هدفت، کلید /edit_goal رو بزن.")
     else await ctx.scene.enter("goal")
 })
 

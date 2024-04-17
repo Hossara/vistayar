@@ -18,7 +18,7 @@ export type GoalContext = Scenes.WizardContext<GoalSession>
 export const goalScene = new Scenes.WizardScene<GoalContext>('goal',
     async (ctx) => {
         await ctx.reply(`
-لطفا تعداد ساعت مطالعه ${ctx.scene.session.state.is_report ? 'امروز خود را' : 'هدف خود را در هفته'} با فرمت زیر وارد کنید. برای مثال:
+مقدار ساعت مطالعه‌ ${ctx.scene.session.state.is_report ? 'امروزت رو' : 'هدفت رو در هفته'} با فرمت زیر وارد کن، مثلا:
 1h معادل ۱ ساعت
 25m معادل ۲۵ دقیقه
 1h25m معادل ۱ ساعت و ۲۵ دقیقه
@@ -50,7 +50,7 @@ export const goalScene = new Scenes.WizardScene<GoalContext>('goal',
     },
     async (ctx) => {
         await ctx.reply(`
-لطفا تعداد تست ${ctx.scene.session.state.is_report ? 'امروز را' : 'هدف خود را در هفته'} به صورت عدد انگلیسی وارد کنید. برای مثال:
+تعداد تست ${ctx.scene.session.state.is_report ? 'امروزت رو' : 'هدفت رو در هفته'} به صورت عدد انگلیسی وارد کن، مثلا:
 25
 53
 124
@@ -93,13 +93,16 @@ export const goalScene = new Scenes.WizardScene<GoalContext>('goal',
 
                 await updateGoal(user_cache.id, report)
 
-                await ctx.reply("گزارش روزانه شما ثبت شد.")
+                await ctx.reply("گزارش امروزت ثبت شد، خسته نباشی!")
             }
             else {
                 if (session.state.is_update) await updateGoal(user_cache.id, {test_count: session.test_count, time: session.time})
                 else await insertGoal(new Goal(user_cache.id, session.test_count, session.time, null))
 
-                await ctx.reply("هدف شما ثبت شد. شما میتوانید با دستور /insert_report تعداد ساعت مطالعه هر روز را ثبت کنید.")
+                await ctx.reply(`
+هدفتو ثبت کردم! بریم واسه ساختنش❤️‍🔥
+با کلید /insert_report توی هرروز میتونی گزارشتو ثبت کنی. البته خودمم یادت میندازم!
+`)
             }
 
             ctx.wizard.selectStep(0)
@@ -113,7 +116,7 @@ export const goalScene = new Scenes.WizardScene<GoalContext>('goal',
 )
 
 goalScene.hears("خروج", async (ctx) => {
-    await ctx.reply("شما از فرایند خارج شدید")
+    await ctx.reply("از فرایند خارج شدی✋🏻")
 
     ctx.wizard.selectStep(0)
 

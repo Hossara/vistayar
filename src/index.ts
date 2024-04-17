@@ -8,7 +8,7 @@ import {goalScene} from "@/scenes/goal.ts"
 import cron from "node-cron"
 import moment from "moment"
 import {iterateRedisKeys} from "@/functions.ts"
-import {findGoalByUser} from "@/services/goal.service.ts"
+import {deleteAllGoals, deleteGoal, findAllGoals, findGoalByUser} from "@/services/goal.service.ts"
 import {goalConverter, Reports} from "@/schemas/Goal.ts"
 
 bot.start(async (ctx) => {
@@ -96,15 +96,100 @@ bot.command('edit_goal', async (ctx: CommandContext) => {
 
 bot.launch()
 
-cron.schedule("0 8 * * *", async () => {
-    const today = moment().isoWeekday()
+cron.schedule("0 23 * * *", async () => {
+    await iterateRedisKeys(async (value: { id: string, username: string, chat_id: string }) => {
+        await bot.telegram.sendMessage(value.chat_id.toString(), "سلام! شب بخیر. لطفا گزارش روزانه خود را از طریق دستور /insert_report ثبت کنید.")
+    })
+}, {
+    scheduled: true,
+    timezone: "Asia/Tehran"
+})
 
-    if (today !== 5 && today !== 6) {
-        await iterateRedisKeys(async (value: { id: string, username: string, chat_id: string }) => {
-            console.log(value)
-            await bot.telegram.sendMessage(value.chat_id.toString(), "سلام! صبح بخیر. لطفا گزارش روزانه خود را از طریق دستور /insert_report ثبت کنید.")
+cron.schedule("0 23 * * Friday", async () => {
+    const goals = await findAllGoals()
+
+    if (!goals || goals.empty) console.log("No goals found.")
+
+    const scores = new Map<string, {
+        full_name: string,
+        success: boolean
+        total_read_time: number
+        total_test_count: number,
+        goal_read_time: number
+        goal_test_count: number,
+        score?: number
+    }>()
+
+    for (const goalsKey of goals.docs) {
+        const doc = goalConverter.fromFirestore(goalsKey)
+
+        const userQuery  = await findUserById(doc.getId())
+        const user = userConverter.fromFirestore(userQuery)
+
+        if (!userQuery || !userQuery.exists) {
+            await deleteGoal(doc.getId())
+
+            continue
+        }
+
+        const total_read_time = Object.values(doc.reports).reduce((acc, obj) => acc + obj.reading_time, 0)
+        const total_test_count = Object.values(doc.reports).reduce((acc, obj) => acc + obj.test_count, 0)
+
+        scores.set(doc.getId(), {
+            full_name: `${user.first_name} ${user.last_name}`,
+            total_read_time, total_test_count, goal_test_count: doc.test_count, goal_read_time: doc.reading_time,
+            success: total_read_time >= doc.reading_time && total_test_count >= doc.test_count
         })
     }
+
+    // Filter users with successful goal
+    // Sort by total read time and total test count with total read time priority
+    // Slice top 5
+    const top5 = new Map([...scores.entries()]
+        .filter((value) => value[1].success)
+        .sort((a, b) => a[1].total_read_time - b[1].total_read_time || a[1].total_test_count - b[1].total_test_count)
+        .slice(0, 5)
+        .map((value, index) => {
+            value[1].score = index + 1
+            return value
+        }))
+
+    // Iterate on list of users in redis
+    await iterateRedisKeys(async (value: { id: string, username: string, chat_id: string }) => {
+        const score = scores.get(value.id)
+        const chat_id = value.chat_id.toString()
+        const sendMessage = bot.telegram.sendMessage
+
+        if (score.success) {
+            await sendMessage(chat_id, "موفق شدی! تونستی با موفقیت هدف خودت رو بزنی!")
+
+            if (top5.has(value.id)) {
+                const top5_info = top5.get(value.id)
+
+                let top5_text = `یه خبر خوب! با رتبه ${top5_info.score} جزو ۵ نفر برتر هفته شدی!<br/>`
+
+                top5_text += "رتبه ۵ نفر اول: <br/>"
+
+                for (const top5_user of top5) {
+                    top5_text += `1) حسین عراقی <br/> ${top5_info.total_test_count} تست - ${top5_info.total_read_time} دقیقه مطالعه <br/>`
+                }
+
+                await sendMessage(chat_id, top5_text, {
+                    parse_mode: "HTML"
+                })
+            }
+        }
+        else {
+            await sendMessage(chat_id, "سلام! یک هفته گذشت و نتونستی هدفت رو بزنی!")
+        }
+
+        await sendMessage(chat_id, `این هفته ${score.total_read_time} دقیقه مطالعه کردی و ${score.total_test_count} تا تست زدی!`, {
+            parse_mode: "HTML"
+        })
+        await sendMessage(chat_id, `هدفی که برای این هفته تعیین کردی ${score.goal_read_time} دقیقه مطالعه و ${score.goal_test_count} عدد تست بود.`)
+
+        await deleteAllGoals()
+    })
 }, {
     scheduled: true,
     timezone: "Asia/Tehran"

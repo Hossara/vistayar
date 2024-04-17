@@ -6,6 +6,6 @@ export const searchByUsernameAndPassword = async (username: string, password: st
         .where("password", "==", password)
         .get()
 
-export const findById = async (id: string) =>
+export const findUserById = async (id: string) =>
     await firebase.collection("users")
         .doc(id).get()

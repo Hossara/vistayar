@@ -83,7 +83,7 @@ bot.command('insert_goal', async (ctx: CommandContext) => {
 })
 
 bot.command('where_am_i', (ctx) => ctx.reply('Hello'))
-bot.command('need_to_talk', (ctx) => ctx.reply('Hello'))
+bot.command('need_to_talk', (ctx) => ctx.replyWithHTML("برای ارتباط با پشتیبان روی آی‌دی زیر کلیک کن:\n@vistateam_admin"))
 
 bot.command('edit_goal', async (ctx: CommandContext) => {
     const user_cache = await redisClient.hGetAll(ctx.chat.id.toString())
@@ -108,7 +108,10 @@ cron.schedule("0 23 * * *", async () => {
 cron.schedule("0 23 * * Friday", async () => {
     const goals = await findAllGoals()
 
-    if (!goals || goals.empty) console.log("No goals found.")
+    if (!goals || goals.empty) {
+        console.log("No goals found.")
+        return
+    }
 
     const scores = new Map<string, {
         full_name: string,
@@ -166,12 +169,12 @@ cron.schedule("0 23 * * Friday", async () => {
             if (top5.has(value.id)) {
                 const top5_info = top5.get(value.id)
 
-                let top5_text = `یه خبر خوب! با رتبه ${top5_info.score} جزو ۵ نفر برتر هفته شدی!<br/>`
+                let top5_text = `یه خبر خوب! با رتبه ${top5_info.score} جزو ۵ نفر برتر هفته شدی!\n`
 
-                top5_text += "رتبه ۵ نفر اول: <br/>"
+                top5_text += "رتبه ۵ نفر اول: \n"
 
                 for (const top5_user of top5) {
-                    top5_text += `1) حسین عراقی <br/> ${top5_info.total_test_count} تست - ${top5_info.total_read_time} دقیقه مطالعه <br/>`
+                    top5_text += `1) حسین عراقی \n ${top5_info.total_test_count} تست - ${top5_info.total_read_time} دقیقه مطالعه \n`
                 }
 
                 await sendMessage(chat_id, top5_text, {

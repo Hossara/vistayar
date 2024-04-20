@@ -9,3 +9,13 @@ export const iterateRedisKeys = async (
         if (data) each(data)
     }
 }
+
+export const days: {[key: string]: string} = {
+    saturday: "شنبه",
+    sunday: "یکشنبه",
+    monday: "دوشنبه",
+    tuesday: "سه‌شنبه",
+    wednesday: "چهارشنبه",
+    thursday: "پنجشنبه",
+    friday: "جمعه",
+}

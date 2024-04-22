@@ -35,8 +35,10 @@ export const weekly_summary_schedule = async () => {
             continue
         }
 
-        const total_read_time = Object.values(doc.reports).reduce((acc, obj) => acc + obj.reading_time, 0)
-        const total_test_count = Object.values(doc.reports).reduce((acc, obj) => acc + obj.test_count, 0)
+        const reports = Object.values(doc.reports).filter(Boolean)
+
+        const total_read_time = reports.reduce((acc, obj) => acc + obj.reading_time, 0)
+        const total_test_count = reports.reduce((acc, obj) => acc + obj.test_count, 0)
 
         scores.set(doc.getId(), {
             full_name: `${user.first_name} ${user.last_name}`,
@@ -61,10 +63,9 @@ export const weekly_summary_schedule = async () => {
     await iterateRedisKeys(async (value: { id: string, username: string, chat_id: string }) => {
         const score = scores.get(value.id)
         const chat_id = value.chat_id.toString()
-        const sendMessage = bot.telegram.sendMessage
 
         if (score.success) {
-            await sendMessage(chat_id, "موفق شدی! تونستی با موفقیت هدف خودت رو بزنی!")
+            await bot.telegram.sendMessage(chat_id, "موفق شدی! تونستی با موفقیت هدف خودت رو بزنی!")
 
             if (top5.has(value.id)) {
                 const top5_info = top5.get(value.id)
@@ -73,23 +74,23 @@ export const weekly_summary_schedule = async () => {
 
                 top5_text += "رتبه ۵ نفر اول: \n"
 
-                for (const top5_user of top5) {
-                    top5_text += `1) حسین عراقی \n ${top5_info.total_test_count} تست - ${top5_info.total_read_time} دقیقه مطالعه \n`
-                }
+                let i = 1
+                top5.forEach((value) => {
+                    top5_text += `${i}) \n ${value.total_test_count} تست - ${value.total_read_time} دقیقه مطالعه \n`
+                    i++
+                })
 
-                await sendMessage(chat_id, top5_text, {
+                await bot.telegram.sendMessage(chat_id, top5_text, {
                     parse_mode: "HTML"
                 })
             }
         }
-        else {
-            await sendMessage(chat_id, "سلام! یک هفته گذشت و نتونستی هدفت رو بزنی!")
-        }
+        else await bot.telegram.sendMessage(chat_id, "سلام! یک هفته گذشت و نتونستی هدفت رو بزنی!")
 
-        await sendMessage(chat_id, `این هفته ${score.total_read_time} دقیقه مطالعه کردی و ${score.total_test_count} تا تست زدی!`, {
+        await bot.telegram.sendMessage(chat_id, `این هفته ${score.total_read_time} دقیقه مطالعه کردی و ${score.total_test_count} تا تست زدی!`, {
             parse_mode: "HTML"
         })
-        await sendMessage(chat_id, `هدفی که برای این هفته تعیین کردی ${score.goal_read_time} دقیقه مطالعه و ${score.goal_test_count} عدد تست بود.`)
+        await bot.telegram.sendMessage(chat_id, `هدفی که برای این هفته تعیین کردی ${score.goal_read_time} دقیقه مطالعه و ${score.goal_test_count} عدد تست بود.`)
 
         await deleteAllGoals()
     })

@@ -19,3 +19,5 @@ export const days: {[key: string]: string} = {
     thursday: "پنجشنبه",
     friday: "جمعه",
 }
+
+export const isRedisDataExists = (data: {[key: string]: any}) => !(data === null || Object.keys(data).length === 0)

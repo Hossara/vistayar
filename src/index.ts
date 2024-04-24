@@ -11,7 +11,10 @@ import {findGoalByUser} from "@/services/goal.service.ts"
 import {goalConverter, Reports} from "@/schemas/Goal.ts"
 import {insert_report_schedules} from "@/schedules/insert_report.ts"
 import {weekly_summary_schedule} from "@/schedules/weekly_summary.ts"
-import {days} from "@/functions.ts"
+import {days, isRedisDataExists} from "@/functions.ts"
+import {smtaScene} from "@/scenes/send_message_to_all.ts"
+
+const LOGIN_ERR = "هنوز وارد حسابت نشدی! روی /login کلیک کن تا وارد حسابت شو."
 
 bot.start(async (ctx) => {
     await ctx.replyWithMarkdownV2(`
@@ -23,7 +26,7 @@ bot.start(async (ctx) => {
 `)
 })
 
-const stage = new Scenes.Stage<WizardContext>([loginScene, goalScene])
+const stage = new Scenes.Stage<WizardContext>([loginScene, goalScene, smtaScene])
 
 bot.use(session())
 bot.use(stage.middleware())
@@ -87,7 +90,7 @@ bot.command('insert_goal', async (ctx: CommandContext) => {
 bot.command('where_am_i', async (ctx: CommandContext) => {
     const user_cache = await redisClient.hGetAll(ctx.chat.id.toString())
 
-    if (!(user_cache === null || Object.keys(user_cache).length === 0)) {
+    if (isRedisDataExists(user_cache)) {
         const goal_source = await findGoalByUser(user_cache.id)
         const goal = goalConverter.fromFirestore(goal_source)
 
@@ -100,7 +103,7 @@ bot.command('where_am_i', async (ctx: CommandContext) => {
 
         await ctx.replyWithHTML(reply)
 
-    } else await ctx.reply("هنوز وارد حسابت نشدی! روی /login کلیک کن تا وارد حسابت شو.")
+    } else await ctx.reply(LOGIN_ERR)
 })
 
 bot.command('need_to_talk', (ctx) => ctx.replyWithHTML("برای ارتباط با پشتیبان روی آی‌دی زیر کلیک کن:\n@vistateam_admin"))
@@ -108,10 +111,23 @@ bot.command('need_to_talk', (ctx) => ctx.replyWithHTML("برای ارتباط ب
 bot.command('edit_goal', async (ctx: CommandContext) => {
     const user_cache = await redisClient.hGetAll(ctx.chat.id.toString())
 
+    if(!isRedisDataExists(user_cache)) return await ctx.reply(LOGIN_ERR)
+
     const goal = await findGoalByUser(user_cache.id)
 
     if (!goal.exists) await ctx.scene.enter("goal")
     else await ctx.scene.enter("goal", {is_update: true})
+})
+
+bot.command('send_message', async (ctx: CommandContext) => {
+    const user_cache = await redisClient.hGetAll(ctx.chat.id.toString())
+
+    if(!isRedisDataExists(user_cache)) return await ctx.reply(LOGIN_ERR)
+
+    const user_query = await findUserById(user_cache.id)
+    const user = userConverter.fromFirestore(user_query)
+
+    if (user.role === "ADMIN") await ctx.scene.enter("smta")
 })
 
 bot.launch()

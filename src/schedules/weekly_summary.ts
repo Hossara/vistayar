@@ -65,7 +65,7 @@ export const weekly_summary_schedule = async () => {
         const chat_id = value.chat_id.toString()
 
         if (score.success) {
-            await bot.telegram.sendMessage(chat_id, "موفق شدی! تونستی با موفقیت هدف خودت رو بزنی!")
+            await bot.telegram.sendMessage(chat_id, `دمت گرم ${score.full_name.split(" ")[0]}! یه قدمِ دیگه نزدیک‌تر به هدفت:) خسته‌ی این هفته نباشی. برنامه‌تو آماده کن که روزای خوب توی راهه🔥`)
 
             if (top5.has(value.id)) {
                 const top5_info = top5.get(value.id)
@@ -85,7 +85,7 @@ export const weekly_summary_schedule = async () => {
                 })
             }
         }
-        else await bot.telegram.sendMessage(chat_id, "سلام! یک هفته گذشت و نتونستی هدفت رو بزنی!")
+        else await bot.telegram.sendMessage(chat_id, "با اینکه این هفته اونی که میخواستی نشد، ولی هنوز وقت هست واسه ساختن و نجات دادنِ هدفات؛ به حای سرزنش، دستِ خودتو بگیر و بلندش کن واسه جنگیدن برای زندگی🧡")
 
         await bot.telegram.sendMessage(chat_id, `این هفته ${score.total_read_time} دقیقه مطالعه کردی و ${score.total_test_count} تا تست زدی!`, {
             parse_mode: "HTML"

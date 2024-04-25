@@ -11,7 +11,7 @@ import {findGoalByUser} from "@/services/goal.service.ts"
 import {goalConverter, Reports} from "@/schemas/Goal.ts"
 import {insert_report_schedules} from "@/schedules/insert_report.ts"
 import {weekly_summary_schedule} from "@/schedules/weekly_summary.ts"
-import {days, isRedisDataExists} from "@/functions.ts"
+import {isRedisDataExists} from "@/functions.ts"
 import {smtaScene} from "@/scenes/send_message_to_all.ts"
 
 const LOGIN_ERR = "هنوز وارد حسابت نشدی! روی /login کلیک کن تا وارد حسابت شو."
@@ -97,17 +97,22 @@ bot.command('where_am_i', async (ctx: CommandContext) => {
     const goal_source = await findGoalByUser(user_cache.id)
     const goal = goalConverter.fromFirestore(goal_source)
 
-    let reply = `تو این هفته باید ${goal.reading_time} دقیقه درس بخونی و ${goal.test_count} تا تست بزنی.\nگزارش های ثبت شدت در این هفته:\n`
-
+    /*let reply = `تو این هفته باید ${goal.reading_time} دقیقه درس بخونی و ${goal.test_count} تا تست بزنی.\nگزارش های ثبت شدت در این هفته:\n`
     for (const day in goal.reports) {
         const report = goal.reports[day as keyof Reports]
         if (report) reply += `${days[day]}) ${report.reading_time} دقیقه مظالعه داشتی و ${report.test_count} تا تست زدی\n`
-    }
+    }*/
 
-    await ctx.replyWithHTML(reply)
+    const reports = Object.values(goal.reports).filter(Boolean)
+
+    const total_read_time = reports.reduce((acc, obj) => acc + obj.reading_time, 0)
+    const total_test_count = reports.reduce((acc, obj) => acc + obj.test_count, 0)
+
+    await ctx.replyWithHTML(`هدف تو برای این هفته، ${goal.reading_time} دقیقه مطالعه و دقیقه درس بخونی و ${goal.test_count} تا تست بوده؛` +
+        `تا اینجا، ${total_read_time} دقیقه خوندی و ${total_test_count} تا تست زدی👀`)
 })
 
-bot.command('need_to_talk', (ctx) => ctx.replyWithHTML("برای ارتباط با پشتیبان روی آی‌دی زیر کلیک کن:\n@vistateam_admin"))
+bot.command('need_to_talk', (ctx) => ctx.replyWithHTML("من همیشه هستم، همین الان بهم پیام بده که مشکلو حل کنیم🧡\n@vistateam_admin"))
 
 bot.command('edit_goal', async (ctx: CommandContext) => {
     const user_cache = await redisClient.hGetAll(ctx.chat.id.toString())

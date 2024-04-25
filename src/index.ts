@@ -34,7 +34,7 @@ bot.use(stage.middleware())
 bot.command('login', async (ctx: CommandContext) => {
     const user_cache = await redisClient.hGetAll(ctx.chat.id.toString())
 
-    if (!(user_cache === null || Object.keys(user_cache).length === 0)) {
+    if (isRedisDataExists(user_cache)) {
         const user = await findUserById(user_cache.id)
 
         if (user) {
@@ -53,17 +53,17 @@ ${userConverter.fromFirestore(user).first_name} عزیز شما قبلا وار�
 bot.command('logout', async (ctx) => {
     const user_exists = await redisClient.exists(ctx.chat.id.toString())
 
-    if (user_exists) {
-        await redisClient.del(ctx.chat.id.toString())
-        await ctx.reply(`
-با موفقیت از حسابت خارج شدی، منتظر برگشتنت هستم! با کلید /login میتونی مجدد مسیرتو باهام شروع کنی!
-`)
-    }
-    else await ctx.reply("شما در حساب خود وارد نشده اید. برای ورود به حساب از دستور /login استفاده نمایید.")
+    if (!user_exists) return await ctx.reply(LOGIN_ERR)
+
+    await redisClient.del(ctx.chat.id.toString())
+
+    await ctx.reply("با موفقیت از حسابت خارج شدی، منتظر برگشتنت هستم! با کلید /login میتونی مجدد مسیرتو باهام شروع کنی!")
 })
 
 bot.command('insert_report', async (ctx: CommandContext) => {
     const user_cache = await redisClient.hGetAll(ctx.chat.id.toString())
+
+    if (!isRedisDataExists(user_cache)) return await ctx.reply(LOGIN_ERR)
 
     const goal = await findGoalByUser(user_cache.id)
     const today = moment().format("dddd").toLowerCase() as keyof Reports
@@ -81,6 +81,8 @@ bot.command('insert_report', async (ctx: CommandContext) => {
 bot.command('insert_goal', async (ctx: CommandContext) => {
     const user_cache = await redisClient.hGetAll(ctx.chat.id.toString())
 
+    if (!isRedisDataExists(user_cache)) return await ctx.reply(LOGIN_ERR)
+
     const goal = await findGoalByUser(user_cache.id)
 
     if (goal.exists) await ctx.reply("قبلا هدف این هفته رو وارد کردی؛ برای ویرایش هدفت، کلید /edit_goal رو بزن.")
@@ -90,20 +92,19 @@ bot.command('insert_goal', async (ctx: CommandContext) => {
 bot.command('where_am_i', async (ctx: CommandContext) => {
     const user_cache = await redisClient.hGetAll(ctx.chat.id.toString())
 
-    if (isRedisDataExists(user_cache)) {
-        const goal_source = await findGoalByUser(user_cache.id)
-        const goal = goalConverter.fromFirestore(goal_source)
+    if (!isRedisDataExists(user_cache)) return await ctx.reply(LOGIN_ERR)
 
-        let reply = `تو این هفته باید ${goal.reading_time} دقیقه درس بخونی و ${goal.test_count} تا تست بزنی.\nگزارش های ثبت شدت در این هفته:\n`
+    const goal_source = await findGoalByUser(user_cache.id)
+    const goal = goalConverter.fromFirestore(goal_source)
 
-        for (const day in goal.reports) {
-            const report = goal.reports[day as keyof Reports]
-            if (report) reply += `${days[day]}) ${report.reading_time} دقیقه مظالعه داشتی و ${report.test_count} تا تست زدی\n`
-        }
+    let reply = `تو این هفته باید ${goal.reading_time} دقیقه درس بخونی و ${goal.test_count} تا تست بزنی.\nگزارش های ثبت شدت در این هفته:\n`
 
-        await ctx.replyWithHTML(reply)
+    for (const day in goal.reports) {
+        const report = goal.reports[day as keyof Reports]
+        if (report) reply += `${days[day]}) ${report.reading_time} دقیقه مظالعه داشتی و ${report.test_count} تا تست زدی\n`
+    }
 
-    } else await ctx.reply(LOGIN_ERR)
+    await ctx.replyWithHTML(reply)
 })
 
 bot.command('need_to_talk', (ctx) => ctx.replyWithHTML("برای ارتباط با پشتیبان روی آی‌دی زیر کلیک کن:\n@vistateam_admin"))

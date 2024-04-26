@@ -38,8 +38,8 @@ export const goalScene = new Scenes.WizardScene<GoalContext>('goal',
         let hour = 0
         let minute = 0
 
-        if (text_match[1]) hour = parseInt(text_match[1].slice(0, -1))
-        if (text_match[2]) minute = parseInt(text_match[2].slice(0, -1))
+        if (text_match[1]) hour = parseInt(text_match[1].slice(0, -1), 10)
+        if (text_match[2]) minute = parseInt(text_match[2].slice(0, -1), 10)
 
         minute += hour * 60
 
@@ -82,7 +82,7 @@ export const goalScene = new Scenes.WizardScene<GoalContext>('goal',
             if (session.state.is_report) {
                 const today = moment().format("dddd").toLowerCase() as keyof Reports
 
-                let report = {
+                const report = {
                     reports: {}
                 } as {reports: Reports}
 

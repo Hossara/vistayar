@@ -1,5 +1,5 @@
 # Vistayar
-A node base telegram bot for [vistateam academy](https://t.me/@vistateam_admin.
+A node base telegram bot for [vistateam academy](https://t.me/@vistateam_admin).
 
 ![Version](https://img.shields.io/badge/Version-1.0.0-green)
 ![Contributor](https://img.shields.io/badge/Contributor-Hossein%20Araghi-blue)

@@ -17,8 +17,6 @@ export const env = {
     BOT_TOKEN: string,
     PROXY: string,
     REDIS_SERVER: string,
-    REDIS_USERNAME: string,
-    REDIS_PASSWORD: string,
 
     FIREBASE_apiKey: string,
     FIREBASE_authDomain: string,
@@ -59,14 +57,7 @@ export const firebase = getFirestore(initializeApp({
 }))
 
 // Initialize redis client
-let redis_options: any = {url: env.REDIS_SERVER}
-if (env.REDIS_USERNAME) redis_options = {
-    ...redis_options,
-    username: env.REDIS_USERNAME,
-    password: env.REDIS_PASSWORD
-}
-
-export const redisClient = createClient(redis_options)
+export const redisClient = createClient({url: env.REDIS_SERVER})
 
 redisClient.on('error', err => console.error("Redis error: ", err))
 

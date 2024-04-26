@@ -7,7 +7,7 @@ import {createClient} from "redis"
 import {initializeApp, ServiceAccount, cert} from 'firebase-admin/app'
 import {getFirestore} from 'firebase-admin/firestore'
 import {WizardContext} from "telegraf/scenes"
-import credential from "../db_info.json"
+import * as credential from "../db_info.json"
 
 dotenv.config()
 export const env = {

@@ -29,7 +29,7 @@ export const env = {
 
 export const isDev: boolean = env.IS_DEV === 'TRUE'
 
-export const proxy = new SocksProxyAgent(env.PROXY)
+export const proxy = env.PROXY ? new SocksProxyAgent(env.PROXY) : null
 
 export const bot = new Telegraf(env.BOT_TOKEN, {
     telegram: {

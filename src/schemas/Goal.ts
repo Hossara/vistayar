@@ -53,9 +53,9 @@ export const goalConverter = {
 
         return new Goal(
             snapshot.id,
-            data['test_count'],
-            data['reading_time'],
-            data['reports'],
+            data.test_count,
+            data.reading_time,
+            data.reports,
         )
     }
 }

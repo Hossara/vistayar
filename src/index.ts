@@ -95,8 +95,12 @@ bot.command('where_am_i', async (ctx: CommandContext) => {
     if (!isRedisDataExists(user_cache)) return await ctx.reply(LOGIN_ERR)
 
     const goal_source = await findGoalByUser(user_cache.id)
+
+    if (!goal_source.exists) return await ctx.reply("هنوز هدفی ثبت نکردی! با دستور /insert_goal هدفت رو ثبت کن.")
+
     const goal = goalConverter.fromFirestore(goal_source)
     const reports = Object.values(goal.reports).filter(Boolean)
+
 
     const total_read_time = reports.reduce((acc, obj) => acc + obj.reading_time, 0)
     const total_test_count = reports.reduce((acc, obj) => acc + obj.test_count, 0)

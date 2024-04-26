@@ -6,6 +6,16 @@ A node base telegram bot for [vistateam academy](https://t.me/@vistateam_admin).
 
 `Tech stack:` Typescript, Telegraf.js, Nodemon.js, Google firebase admin
 
+<!-- TOC -->
+* [Vistayar](#vistayar)
+    * [Develop tracking](#develop-tracking)
+    * [Run and test](#run-and-test)
+    * [Production](#production)
+    * [Environment](#environment)
+    * [Contributors](#contributors)
+    * [Donate me](#donate-me)
+<!-- TOC -->
+
 ### Develop tracking
 - [x] MVP 
 - [x] Release v1
@@ -27,9 +37,32 @@ docker compose up -d
 pnpm start
 ```
 
-### Production 
-soon...
+### Production
+1. Build and push `Dockerfile` into your repository
+2. Use Docker compose to run the bot
+```yaml
+services:
+  vista_redis_stack:
+    container_name: vista_redis_stack
+    image: redis/redis-stack:latest
+    environment:
+      REDIS_ARGS: "--requirepass redispass"
+    ports:
+      - "your_own_port:8001"
+    volumes:
+      - "./redis_data:/data"
 
+  vista_bot:
+    container_name: vista_bot
+    image: yourusername/vistayar:latest
+    restart: on-failure
+    depends_on:
+      - vista_redis_stack
+    volumes:
+      - "./db_info.json:/app/db_info.json"
+```
+
+`! Remember to place your own db_info.json file near docker-compose.yaml`
 ### Environment
 
 | ENV                     | Usage                                                                                                            | Required |

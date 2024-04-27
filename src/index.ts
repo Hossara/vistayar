@@ -105,7 +105,7 @@ bot.command('where_am_i', async (ctx: CommandContext) => {
     const total_read_time = reports.reduce((acc, obj) => acc + obj.reading_time, 0)
     const total_test_count = reports.reduce((acc, obj) => acc + obj.test_count, 0)
 
-    let reply = `هدف تو برای این هفته این بوده که ${goal.reading_time} دقیقه درس بخونی و ${goal.test_count} تا تست بزنی؛\nتا اینجا، ${total_read_time} دقیقه خوندی و ${total_test_count} تا تست زدی👀\n`
+    let reply = `هدف تو برای این هفته این بوده که ${goal.reading_time} دقیقه درس بخونی و ${goal.test_count} تا تست بزنی؛\n\nتا اینجا، ${total_read_time} دقیقه خوندی و ${total_test_count} تا تست زدی👀\n\n`
 
     for (const day in goal.reports) {
         const report = goal.reports[day as keyof Reports]

@@ -109,7 +109,7 @@ bot.command('where_am_i', async (ctx: CommandContext) => {
 
     for (const day in goal.reports) {
         const report = goal.reports[day as keyof Reports]
-        if (report) reply += `${days[day]}: ${report.reading_time} دقیقه مظالعه داشتی و ${report.test_count} تا تست زدی\n`
+        if (report) reply += `${days[day]}: ${report.reading_time} دقیقه مطالعه داشتی و ${report.test_count} تا تست زدی\n`
     }
 
     await ctx.replyWithHTML(reply)

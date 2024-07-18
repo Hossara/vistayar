@@ -1,11 +1,18 @@
-import {firebase} from "@app"
+import {supabase} from "@app"
 
-export const searchByUsernameAndPassword = async (username: string, password: string) =>
-    await firebase.collection("users")
-        .where("username", "==", username)
-        .where("password", "==", password)
-        .get()
+export const searchByPhoneAndPassword = async (field: string, password: string) =>
+    await supabase
+        .from("users")
+        .select("*")
+        .eq("phone", field)
+        .eq("password", password)
+        .limit(1)
+        .single()
 
 export const findUserById = async (id: string) =>
-    await firebase.collection("users")
-        .doc(id).get()
+    await supabase
+        .from("users")
+        .select()
+        .eq("id", id)
+        .limit(1)
+        .single()

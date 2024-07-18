@@ -3,11 +3,13 @@ import {SocksProxyAgent} from "socks-proxy-agent"
 import {Context, Telegraf} from "telegraf"
 import {Message, Update } from "telegraf/typings/core/types/typegram"
 import {CommandContextExtn} from "telegraf/typings/telegram-types"
-import {createClient} from "redis"
+import {createClient as createRedisClient} from "redis"
+import {createClient as createSupabaseClient} from "@supabase/supabase-js"
 import {initializeApp, ServiceAccount, cert} from 'firebase-admin/app'
 import {getFirestore} from 'firebase-admin/firestore'
 import {WizardContext} from "telegraf/scenes"
 import * as credential from "../db_info.json"
+import {Database} from "../database.types.ts"
 
 dotenv.config()
 export const env = {
@@ -18,18 +20,17 @@ export const env = {
     PROXY: string,
     REDIS_SERVER: string,
 
-    FIREBASE_apiKey: string,
-    FIREBASE_authDomain: string,
-    FIREBASE_projectId: string,
-    FIREBASE_storageBucket: string,
-    FIREBASE_messagingSenderId: string,
-    FIREBASE_appId: string,
+    SUPABASE_SERVER: string,
+    SUPABASE_SECRET: string
+
     FIREBASE_ADMIN_DATABASE: string
 }
 
 export const isDev: boolean = env.IS_DEV === 'TRUE'
 
 export const proxy = env.PROXY ? new SocksProxyAgent(env.PROXY) : null
+
+export const supabase = createSupabaseClient<Database>(env.SUPABASE_SERVER, env.SUPABASE_SECRET)
 
 export const bot = new Telegraf(env.BOT_TOKEN, {
     telegram: {
@@ -57,7 +58,7 @@ export const firebase = getFirestore(initializeApp({
 }))
 
 // Initialize redis client
-export const redisClient = createClient({url: env.REDIS_SERVER})
+export const redisClient = createRedisClient({url: env.REDIS_SERVER})
 
 redisClient.on('error', err => console.error("Redis error: ", err))
 

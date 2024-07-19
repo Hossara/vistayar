@@ -1,26 +1,49 @@
-import {firebase} from "@app"
-import {Goal, goalConverter} from "@/schemas/Goal.ts"
+import {supabase} from "@app"
+import {QueryData} from "@supabase/supabase-js"
 
 export const findGoalByUser = async (id: string) =>
-    await firebase.collection("goals")
-        .doc(id).get()
+    await supabase
+        .from("goals")
+        .select()
+        .eq("user", id)
+        .limit(1)
+        .single()
 
-export const insertGoal = async (goal: Goal) =>
-    await firebase.collection("goals")
-        .doc(goal.getId()).set(goalConverter.toFirestore(goal))
+export const findGoalWithReportByUser = async (id: string) =>
+    await supabase
+        .from("goals")
+        .select("*, reports (*)")
+        .eq("user", id)
+        .limit(1)
+        .single()
+
+export type GoalWithReport = QueryData<ReturnType<typeof findGoalWithReportByUser>>
+
+export const insertGoal = async (user_id: string, test_count: number, time: number) =>
+    await supabase
+        .from("goals")
+        .insert({user: user_id, test_count, reading_time: time})
 
 export const updateGoal = async (id: string, goal: { [key: string]: any }) =>
-    await firebase.collection("goals")
-        .doc(id).set(goal, {merge: true})
+    await supabase
+        .from("goals")
+        .update({...goal})
+        .eq("user", id)
 
 export const deleteGoal = async (id: string) =>
-    await firebase.collection("goals")
-        .doc(id).delete()
+    await supabase
+        .from("goals")
+        .delete()
+        .eq("user", id)
 
 export const deleteAllGoals = async () =>
-    firebase.collection("goals").get().then((value) => {
-        value.forEach((snapshot) => snapshot.ref.delete())
-    })
+    await supabase
+        .from("goals")
+        .delete()
 
-export const findAllGoals = async () =>
-    await firebase.collection('goals').get()
+export const findAllGoalsWithReports = async () =>
+    await supabase
+        .from("goals")
+        .select("*, reports (*)")
+
+export type AllGoalWithReport = QueryData<ReturnType<typeof findAllGoalsWithReports>>

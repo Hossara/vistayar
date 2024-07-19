@@ -5,10 +5,7 @@ import {Message, Update } from "telegraf/typings/core/types/typegram"
 import {CommandContextExtn} from "telegraf/typings/telegram-types"
 import {createClient as createRedisClient} from "redis"
 import {createClient as createSupabaseClient} from "@supabase/supabase-js"
-import {initializeApp, ServiceAccount, cert} from 'firebase-admin/app'
-import {getFirestore} from 'firebase-admin/firestore'
 import {WizardContext} from "telegraf/scenes"
-import * as credential from "../db_info.json"
 import {Database} from "../database.types.ts"
 
 dotenv.config()
@@ -22,8 +19,6 @@ export const env = {
 
     SUPABASE_SERVER: string,
     SUPABASE_SECRET: string
-
-    FIREBASE_ADMIN_DATABASE: string
 }
 
 export const isDev: boolean = env.IS_DEV === 'TRUE'
@@ -49,13 +44,6 @@ export const getInputText = (text: string) => text
     .replace("http://", '')
     .replace("https://", '')
     .replace("file://", '')
-
-// Initialize Firebase
-export const firebase = getFirestore(initializeApp({
-    credential: cert(credential as ServiceAccount, proxy),
-    databaseURL: env.FIREBASE_ADMIN_DATABASE,
-    httpAgent: proxy
-}))
 
 // Initialize redis client
 export const redisClient = createRedisClient({url: env.REDIS_SERVER})

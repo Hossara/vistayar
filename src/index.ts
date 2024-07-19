@@ -6,7 +6,7 @@ import {findUserById} from "@/services/user.service.ts"
 import {goalScene} from "@/scenes/goal.ts"
 import cron from "node-cron"
 import moment from "moment"
-import {findGoalByUser, findGoalWithReportByUser} from "@/services/goal.service.ts"
+import {findGoalByUser, findGoalWithReportByUser, GoalWithReport} from "@/services/goal.service.ts"
 import {Reports} from "@/schemas/Goal.ts"
 import {insert_report_schedules} from "@/schedules/insert_report.ts"
 import {weekly_summary_schedule} from "@/schedules/weekly_summary.ts"
@@ -64,15 +64,18 @@ bot.command('insert_report', async (ctx: CommandContext) => {
 
     if (!isRedisDataExists(user_cache)) return await ctx.reply(LOGIN_ERR)
 
-    const goal = await findGoalByUser(user_cache.id)
+    const {data: goal, error} = await findGoalWithReportByUser(user_cache.id)
     const today = moment().format("dddd").toLowerCase() as keyof Reports
 
-    if (!goal.exists) await ctx.reply("شما هنوز هدفی برای این هفته ثبت نکردید. لطفا از طریق دستور /insert_goal هدف خود را ثبت کنید.")
+    if (!goal || error) await ctx.reply("شما هنوز هدفی برای این هفته ثبت نکردید. لطفا از طریق دستور /insert_goal هدف خود را ثبت کنید.")
     else {
-        if (goalConverter.fromFirestore(goal).reports[today])
+        // Fix type of join query
+        const goalWithReport: GoalWithReport = goal
+
+        // Check if any record exists before
+        if (goalWithReport.reports && goalWithReport.reports[today])
             await ctx.replyWithHTML("قبلا برای امروز گزارشت رو ثبت کردی!" +
                 "با ادامه فرایند و ورود عدد جدید، گزارش امروز ویرایش میشه. ولی اگر قصد خروج از این فرایند رو داری، کلمه <u>خروج</u> رو بفرست.")
-
         await ctx.scene.enter("goal", {is_report: true})
     }
 })
@@ -82,9 +85,9 @@ bot.command('insert_goal', async (ctx: CommandContext) => {
 
     if (!isRedisDataExists(user_cache)) return await ctx.reply(LOGIN_ERR)
 
-    const goal = await findGoalByUser(user_cache.id)
+    const {data: goal, error} = await findGoalByUser(user_cache.id)
 
-    if (goal.exists) await ctx.reply("قبلا هدف این هفته رو وارد کردی؛ برای ویرایش هدفت، کلید /edit_goal رو بزن.")
+    if (goal && !error) await ctx.reply("قبلا هدف این هفته رو وارد کردی؛ برای ویرایش هدفت، کلید /edit_goal رو بزن.")
     else await ctx.scene.enter("goal")
 })
 
@@ -121,9 +124,9 @@ bot.command('edit_goal', async (ctx: CommandContext) => {
 
     if(!isRedisDataExists(user_cache)) return await ctx.reply(LOGIN_ERR)
 
-    const goal = await findGoalByUser(user_cache.id)
+    const {data: goal, error} = await findGoalByUser(user_cache.id)
 
-    if (!goal.exists) await ctx.scene.enter("goal")
+    if (!goal || error) await ctx.scene.enter("goal")
     else await ctx.scene.enter("goal", {is_update: true})
 })
 

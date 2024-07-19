@@ -1,4 +1,9 @@
-import {firebase} from "@app"
+import {supabase} from "@app"
+import {Report} from "@/schemas/Goal.ts"
 
-export const insertReportByUser = async (id: string, update: any) =>
-    await firebase.collection("goals").doc(id).update(update)
+export const insertReportByUser = async (id: string, update: { [key: string]: Report}) =>
+    await supabase
+        .from("reports")
+        .insert({...update, user: id})
+        .select()
+        .single()

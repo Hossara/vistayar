@@ -2,7 +2,7 @@ import {Composer, Scenes} from "telegraf"
 import {getInputText, redisClient, supabase} from "@app"
 import {searchByPhoneAndPassword} from "@/services/user.service.ts"
 import {findGoalByUser} from "@/services/goal.service.ts"
-import {checkPhoneNumber} from "@/functions.ts";
+import {checkPhoneNumber} from "@/functions.ts"
 
 interface LoginSession extends Scenes.WizardSessionData {
     phone: string
@@ -78,9 +78,9 @@ export const loginScene = new Scenes.WizardScene<LoginContext>('login',
 
         await ctx.scene.leave()
 
-        const goal = await findGoalByUser(user_data.getId())
+        const {data: goal, error: error_find} = await findGoalByUser(user.id)
 
-        if (!goal.exists) await ctx.scene.enter("goal")
+        if (!goal || error_find) await ctx.scene.enter("goal")
     },
 )
 

@@ -14,7 +14,7 @@ export type Database = {
                     created_at: string
                     id: string
                     reading_time: number | null
-                    reports: number | null
+                    reports: string | null
                     test_count: number | null
                     user: string
                 }
@@ -22,7 +22,7 @@ export type Database = {
                     created_at?: string
                     id?: string
                     reading_time?: number | null
-                    reports?: number | null
+                    reports?: string | null
                     test_count?: number | null
                     user?: string
                 }
@@ -30,7 +30,7 @@ export type Database = {
                     created_at?: string
                     id?: string
                     reading_time?: number | null
-                    reports?: number | null
+                    reports?: string | null
                     test_count?: number | null
                     user?: string
                 }
@@ -54,35 +54,46 @@ export type Database = {
             reports: {
                 Row: {
                     friday: Json | null
-                    id: number
+                    id: string
                     monday: Json | null
                     saturday: Json | null
                     sunday: Json | null
                     thursday: Json | null
                     tuesday: Json | null
+                    user: string
                     wednesday: Json | null
                 }
                 Insert: {
                     friday?: Json | null
-                    id?: number
+                    id?: string
                     monday?: Json | null
                     saturday?: Json | null
                     sunday?: Json | null
                     thursday?: Json | null
                     tuesday?: Json | null
+                    user?: string
                     wednesday?: Json | null
                 }
                 Update: {
                     friday?: Json | null
-                    id?: number
+                    id?: string
                     monday?: Json | null
                     saturday?: Json | null
                     sunday?: Json | null
                     thursday?: Json | null
                     tuesday?: Json | null
+                    user?: string
                     wednesday?: Json | null
                 }
-                Relationships: []
+                Relationships: [
+                    {
+                        foreignKeyName: "reports_user_fkey"
+                        columns: ["user"]
+                        isOneToOne: false
+                        referencedRelation: "users"
+                        referencedColumns: ["id"]
+                    },
+                ]
             }
             users: {
                 Row: {

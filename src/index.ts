@@ -36,7 +36,7 @@ bot.command('login', async (ctx: CommandContext) => {
     if (isRedisDataExists(user_cache)) {
         const {data: user} = await findUserById(user_cache.id)
 
-        if (user) {
+        if (!user) {
             await redisClient.del(user_cache.id)
             await ctx.scene.enter("login")
         }

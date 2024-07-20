@@ -12,8 +12,8 @@
   "author": "Hossein Araghi <hoseinaraghi84@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@supabase/supabase-js": "^2.44.4",
     "dotenv": "^16.4.5",
-    "firebase-admin": "^12.0.0",
     "moment": "^2.30.1",
     "node-cron": "^3.0.3",
     "redis": "^4.6.13",

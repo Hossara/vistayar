@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   vista_redis_stack:
     image: redis/redis-stack:latest
@@ -8,7 +6,7 @@ services:
       - "8003:8001"
       - "6380:6379"
     volumes:
-      - vista-redis-volume
+      - vista-redis-volume:/data
 
 volumes:
   vista-redis-volume:

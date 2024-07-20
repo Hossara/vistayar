@@ -2,13 +2,12 @@ import {bot, CommandContext, redisClient} from "@app"
 import {Scenes, session} from "telegraf"
 import {WizardContext} from "telegraf/scenes"
 import {loginScene} from "@/scenes/login.ts"
-import {userConverter} from "@/schemas/User.ts"
 import {findUserById} from "@/services/user.service.ts"
 import {goalScene} from "@/scenes/goal.ts"
 import cron from "node-cron"
 import moment from "moment"
-import {findGoalByUser} from "@/services/goal.service.ts"
-import {goalConverter, Reports} from "@/schemas/Goal.ts"
+import {findGoalByUser, findGoalWithReportByUser, GoalWithReport} from "@/services/goal.service.ts"
+import {Reports} from "@/schemas/Goal.ts"
 import {insert_report_schedules} from "@/schedules/insert_report.ts"
 import {weekly_summary_schedule} from "@/schedules/weekly_summary.ts"
 import {days, isRedisDataExists} from "@/functions.ts"
@@ -35,7 +34,7 @@ bot.command('login', async (ctx: CommandContext) => {
     const user_cache = await redisClient.hGetAll(ctx.chat.id.toString())
 
     if (isRedisDataExists(user_cache)) {
-        const user = await findUserById(user_cache.id)
+        const {data: user} = await findUserById(user_cache.id)
 
         if (user) {
             await redisClient.del(user_cache.id)
@@ -43,7 +42,7 @@ bot.command('login', async (ctx: CommandContext) => {
         }
 
         else await ctx.reply(`
-${userConverter.fromFirestore(user).first_name} عزیز شما قبلا وارد شدید!
+${user.first_name} عزیز شما قبلا وارد شدید!
 برای خروج از حساب از دستور /logout استفاده کنید.
         `)
     }
@@ -65,15 +64,18 @@ bot.command('insert_report', async (ctx: CommandContext) => {
 
     if (!isRedisDataExists(user_cache)) return await ctx.reply(LOGIN_ERR)
 
-    const goal = await findGoalByUser(user_cache.id)
+    const {data: goal, error} = await findGoalWithReportByUser(user_cache.id)
     const today = moment().format("dddd").toLowerCase() as keyof Reports
 
-    if (!goal.exists) await ctx.reply("شما هنوز هدفی برای این هفته ثبت نکردید. لطفا از طریق دستور /insert_goal هدف خود را ثبت کنید.")
+    if (!goal || error) await ctx.reply("شما هنوز هدفی برای این هفته ثبت نکردید. لطفا از طریق دستور /insert_goal هدف خود را ثبت کنید.")
     else {
-        if (goalConverter.fromFirestore(goal).reports[today])
+        // Fix type of join query
+        const goalWithReport: GoalWithReport = goal
+
+        // Check if any record exists before
+        if (goalWithReport.reports && goalWithReport.reports[today])
             await ctx.replyWithHTML("قبلا برای امروز گزارشت رو ثبت کردی!" +
                 "با ادامه فرایند و ورود عدد جدید، گزارش امروز ویرایش میشه. ولی اگر قصد خروج از این فرایند رو داری، کلمه <u>خروج</u> رو بفرست.")
-
         await ctx.scene.enter("goal", {is_report: true})
     }
 })
@@ -83,9 +85,9 @@ bot.command('insert_goal', async (ctx: CommandContext) => {
 
     if (!isRedisDataExists(user_cache)) return await ctx.reply(LOGIN_ERR)
 
-    const goal = await findGoalByUser(user_cache.id)
+    const {data: goal, error} = await findGoalByUser(user_cache.id)
 
-    if (goal.exists) await ctx.reply("قبلا هدف این هفته رو وارد کردی؛ برای ویرایش هدفت، کلید /edit_goal رو بزن.")
+    if (goal && !error) await ctx.reply("قبلا هدف این هفته رو وارد کردی؛ برای ویرایش هدفت، کلید /edit_goal رو بزن.")
     else await ctx.scene.enter("goal")
 })
 
@@ -122,9 +124,9 @@ bot.command('edit_goal', async (ctx: CommandContext) => {
 
     if(!isRedisDataExists(user_cache)) return await ctx.reply(LOGIN_ERR)
 
-    const goal = await findGoalByUser(user_cache.id)
+    const {data: goal, error} = await findGoalByUser(user_cache.id)
 
-    if (!goal.exists) await ctx.scene.enter("goal")
+    if (!goal || error) await ctx.scene.enter("goal")
     else await ctx.scene.enter("goal", {is_update: true})
 })
 
@@ -133,10 +135,9 @@ bot.command('send_message', async (ctx: CommandContext) => {
 
     if(!isRedisDataExists(user_cache)) return await ctx.reply(LOGIN_ERR)
 
-    const user_query = await findUserById(user_cache.id)
-    const user = userConverter.fromFirestore(user_query)
+    const {data: user_query} = await findUserById(user_cache.id)
 
-    if (user.role === "ADMIN") await ctx.scene.enter("smta")
+    if (user_query.role === "ADMIN") await ctx.scene.enter("smta")
 })
 
 bot.launch()

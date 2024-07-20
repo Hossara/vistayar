@@ -1,7 +1,6 @@
 import {deleteAllGoals, deleteGoal, findAllGoals} from "@/services/goal.service.ts"
 import {goalConverter} from "@/schemas/Goal.ts"
 import {findUserById} from "@/services/user.service.ts"
-import {userConverter} from "@/schemas/User.ts"
 import {iterateRedisKeys} from "@/functions.ts"
 import {bot} from "@app"
 
@@ -26,10 +25,12 @@ export const weekly_summary_schedule = async () => {
     for (const goalsKey of goals.docs) {
         const doc = goalConverter.fromFirestore(goalsKey)
 
-        const userQuery  = await findUserById(doc.getId())
-        const user = userConverter.fromFirestore(userQuery)
+        const {data: user, error}  = await findUserById(doc.getId())
 
-        if (!userQuery || !userQuery.exists) {
+
+        if (!user || error) {
+            console.log(error)
+
             await deleteGoal(doc.getId())
 
             continue

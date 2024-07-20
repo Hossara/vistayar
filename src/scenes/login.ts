@@ -1,31 +1,32 @@
 import {Composer, Scenes} from "telegraf"
-import {getInputText, redisClient, regexes} from "@app"
-import {userConverter} from "@/schemas/User.ts"
-import {searchByUsernameAndPassword} from "@/services/user.service.ts"
+import {getInputText, redisClient, supabase} from "@app"
+import {searchByPhoneAndPassword} from "@/services/user.service.ts"
 import {findGoalByUser} from "@/services/goal.service.ts"
+import {checkPhoneNumber} from "@/functions.ts"
 
 interface LoginSession extends Scenes.WizardSessionData {
-    username: string
+    phone: string
     password: string
 }
 
 export type LoginContext = Scenes.WizardContext<LoginSession>
 
-
 // Scene registration
 export const loginScene = new Scenes.WizardScene<LoginContext>('login',
     async (ctx) => {
-        await ctx.reply("برای ورود به بات، نام کاربری‌ خودت رو وارد کن:")
+        const users = await supabase.from("users").select("*")
+        console.log(users.data)
+        await ctx.reply("برای ورود به بات، شماره تلفن خودت رو وارد کن:")
         return ctx.wizard.next()
     },
     async (ctx, next) => {
-        if (!regexes.safe_text.test(ctx.text) || ctx.text[0] === '/' || ctx.text.length < 3 || ctx.text.length > 30) {
-            await ctx.reply("نام کاربریت معتبر نبود!")
+        if (!checkPhoneNumber(ctx.text)) {
+            await ctx.reply("شماره تلفن ات معتبر نبود!")
             ctx.wizard.back()
             return Composer.unwrap(ctx.wizard.step)(ctx, next)
         }
 
-        ctx.scene.session.username = getInputText(ctx.text)
+        ctx.scene.session.phone = getInputText(ctx.text)
         ctx.wizard.next()
         return Composer.unwrap(ctx.wizard.step)(ctx, next)
     },
@@ -46,41 +47,40 @@ export const loginScene = new Scenes.WizardScene<LoginContext>('login',
         return Composer.unwrap(ctx.wizard.step)(ctx, next)
     },
     async (ctx) => {
-        if (!ctx.scene.session.username || !ctx.scene.session.password)
+        if (!ctx.scene.session.phone || !ctx.scene.session.password)
             return ctx.wizard.selectStep(0)
 
-        const user = await searchByUsernameAndPassword(
-            ctx.scene.session.username,
+        const {data: user, error: error_search} = await searchByPhoneAndPassword(
+            ctx.scene.session.phone,
             ctx.scene.session.password
         )
 
         await ctx.reply("درحال ورود...")
 
-        if (!user.docs[0] || !user.docs[0].exists) {
-            await ctx.reply("نام کاربری یا رمز عبور شما اشتباه است.")
+        if (!user || error_search) {
+            if (error_search) console.log(error_search)
+
+            await ctx.reply(error_search ? "خطایی رخ داد!" : "شماره تلفن یا رمز عبور شما اشتباه است.")
             ctx.wizard.selectStep(0)
             ctx.scene.reset()
             return ctx.scene.leave()
         }
 
-        const user_data = userConverter.fromFirestore(user.docs[0])
-
         await redisClient.hSet(ctx.chat.id.toString(), {
-            id: user_data.getId(),
-            username: user_data.username,
+            id: user.id,
             chat_id: ctx.chat.id
         })
 
         ctx.wizard.selectStep(0)
         ctx.scene.reset()
 
-        await ctx.reply(`${user_data.first_name} عزیز، خوش اومدی!`)
+        await ctx.reply(`${user.first_name} عزیز، خوش اومدی!`)
 
         await ctx.scene.leave()
 
-        const goal = await findGoalByUser(user_data.getId())
+        const {data: goal, error: error_find} = await findGoalByUser(user.id)
 
-        if (!goal.exists) await ctx.scene.enter("goal")
+        if (!goal || error_find) await ctx.scene.enter("goal")
     },
 )
 

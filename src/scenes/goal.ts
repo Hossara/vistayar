@@ -1,8 +1,9 @@
 import {Composer, Scenes} from "telegraf"
 import {getInputText, redisClient, regexes} from "@app"
 import {insertGoal, updateGoal} from "@/services/goal.service.ts"
-import {Goal, Reports} from "@/schemas/Goal.ts"
+import {Reports} from "@/schemas/Goal.ts"
 import moment from "moment/moment"
+import {insertReportByUser} from "@/services/report.service.ts"
 
 export interface GoalSession extends Scenes.WizardSessionData {
     time: number,
@@ -82,22 +83,42 @@ export const goalScene = new Scenes.WizardScene<GoalContext>('goal',
             if (session.state.is_report) {
                 const today = moment().format("dddd").toLowerCase() as keyof Reports
 
-                const report = {
-                    reports: {}
-                } as {reports: Reports}
+                const report = {} as Reports
 
-                report.reports[today] = {
+                report[today] = {
                     test_count: session.test_count,
                     reading_time: session.time
                 }
 
-                await updateGoal(user_cache.id, report)
+                const {data, error} = await insertReportByUser(user_cache.id, report)
+
+                if (!data || error) {
+                    console.log(error)
+                    await ctx.reply("خطایی هنگام ثبت گذارش رخ داد!")
+
+                    ctx.wizard.selectStep(0)
+                    ctx.scene.reset()
+                    return ctx.scene.leave()
+                }
+
+                await updateGoal(user_cache.id, {reports: data.id})
 
                 await ctx.reply("گزارش امروزت ثبت شد، خسته نباشی!")
             }
             else {
-                if (session.state.is_update) await updateGoal(user_cache.id, {test_count: session.test_count, time: session.time})
-                else await insertGoal(new Goal(user_cache.id, session.test_count, session.time, null))
+                if (session.state.is_update) await updateGoal(user_cache.id, {test_count: session.test_count, time: session.time}) //ToDO
+                else {
+                    const {error} = await insertGoal(user_cache.id, session.test_count, session.time)
+
+                    if (error) {
+                        console.log(error)
+                        await ctx.reply("خطایی هنگام ثبت هدف رخ داد!")
+
+                        ctx.wizard.selectStep(0)
+                        ctx.scene.reset()
+                        return ctx.scene.leave()
+                    }
+                }
 
                 await ctx.reply(`
 هدفتو ثبت کردم! بریم واسه ساختنش❤️‍🔥

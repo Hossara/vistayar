@@ -56,9 +56,9 @@ export const loginScene = new Scenes.WizardScene<LoginContext>('login',
         await ctx.reply("درحال ورود...")
 
         if (!user || error_search) {
-            if (error_search) console.log(error_search)
+            if (error_search.code !== "PGRST116") console.log(error_search)
 
-            await ctx.reply(error_search ? "خطایی رخ داد!" : "شماره تلفن یا رمز عبور شما اشتباه است.")
+            await ctx.reply(error_search.code !== "PGRST116" ? "خطایی رخ داد!" : "شماره تلفن یا رمز عبور شما اشتباه است.")
             ctx.wizard.selectStep(0)
             ctx.scene.reset()
             return ctx.scene.leave()

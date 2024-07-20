@@ -7,7 +7,7 @@ import {goalScene} from "@/scenes/goal.ts"
 import cron from "node-cron"
 import moment from "moment"
 import {findGoalByUser, findGoalWithReportByUser, GoalWithReport} from "@/services/goal.service.ts"
-import {Reports} from "@/schemas/Goal.ts"
+import {extractNonNullReports, Reports, Report} from "@/schemas/Goal.ts"
 import {insert_report_schedules} from "@/schedules/insert_report.ts"
 import {weekly_summary_schedule} from "@/schedules/weekly_summary.ts"
 import {days, isRedisDataExists} from "@/functions.ts"
@@ -96,30 +96,27 @@ bot.command('where_am_i', async (ctx: CommandContext) => {
 
     if (!isRedisDataExists(user_cache)) return await ctx.reply(LOGIN_ERR)
 
-    const {data: goal, error} = await findGoalWithReportByUser(user_cache.id)
+    const {data, error} = await findGoalWithReportByUser(user_cache.id)
 
-    if (!goal || error) return await ctx.reply("هنوز هدفی ثبت نکردی! با دستور /insert_goal هدفت رو ثبت کن.")
+    if (!data || error) return await ctx.reply("هنوز هدفی ثبت نکردی! با دستور /insert_goal هدفت رو ثبت کن.")
 
-    // ToDo: Calculate
-/*
+    const goal: GoalWithReport = data
 
-    const reports = Object.values(goal.reports).filter(Boolean)
+    if (!goal.reports) return ctx.reply("هنوز گذارشی ثبت نکردی!")
 
+    const reports = extractNonNullReports(goal.reports)
 
     const total_read_time = reports.reduce((acc, obj) => acc + obj.reading_time, 0)
     const total_test_count = reports.reduce((acc, obj) => acc + obj.test_count, 0)
 
-    const reply = `هدف تو برای این هفته این بوده که ${goal.reading_time} دقیقه درس بخونی و ${goal.test_count} تا تست بزنی؛\n\nتا اینجا، ${total_read_time} دقیقه خوندی و ${total_test_count} تا تست زدی👀\n\n`
-*/
+    let reply = `هدف تو برای این هفته این بوده که ${goal.reading_time} دقیقه درس بخونی و ${goal.test_count} تا تست بزنی؛\n\nتا اینجا، ${total_read_time} دقیقه خوندی و ${total_test_count} تا تست زدی👀\n\n`
 
-    // ToDo: Join
-    /*
     for (const day in goal.reports) {
-        const report = goal.reports[day as keyof Reports]
+        const report = goal.reports[day as keyof Reports] as Report
         if (report) reply += `${days[day]}: ${report.reading_time} دقیقه مطالعه داشتی و ${report.test_count} تا تست زدی\n`
     }
 
-    await ctx.replyWithHTML(reply)*/
+    await ctx.replyWithHTML(reply)
 })
 
 bot.command('need_to_talk', (ctx) => ctx.replyWithHTML("من همیشه هستم، همین الان بهم پیام بده که مشکلو حل کنیم🧡\n@vistateam_admin"))

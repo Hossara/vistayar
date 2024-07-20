@@ -96,25 +96,30 @@ bot.command('where_am_i', async (ctx: CommandContext) => {
 
     if (!isRedisDataExists(user_cache)) return await ctx.reply(LOGIN_ERR)
 
-    const goal_source = await findGoalByUser(user_cache.id)
+    const {data: goal, error} = await findGoalWithReportByUser(user_cache.id)
 
-    if (!goal_source.exists) return await ctx.reply("هنوز هدفی ثبت نکردی! با دستور /insert_goal هدفت رو ثبت کن.")
+    if (!goal || error) return await ctx.reply("هنوز هدفی ثبت نکردی! با دستور /insert_goal هدفت رو ثبت کن.")
 
-    const goal = goalConverter.fromFirestore(goal_source)
+    // ToDo: Calculate
+/*
+
     const reports = Object.values(goal.reports).filter(Boolean)
 
 
     const total_read_time = reports.reduce((acc, obj) => acc + obj.reading_time, 0)
     const total_test_count = reports.reduce((acc, obj) => acc + obj.test_count, 0)
 
-    let reply = `هدف تو برای این هفته این بوده که ${goal.reading_time} دقیقه درس بخونی و ${goal.test_count} تا تست بزنی؛\n\nتا اینجا، ${total_read_time} دقیقه خوندی و ${total_test_count} تا تست زدی👀\n\n`
+    const reply = `هدف تو برای این هفته این بوده که ${goal.reading_time} دقیقه درس بخونی و ${goal.test_count} تا تست بزنی؛\n\nتا اینجا، ${total_read_time} دقیقه خوندی و ${total_test_count} تا تست زدی👀\n\n`
+*/
 
+    // ToDo: Join
+    /*
     for (const day in goal.reports) {
         const report = goal.reports[day as keyof Reports]
         if (report) reply += `${days[day]}: ${report.reading_time} دقیقه مطالعه داشتی و ${report.test_count} تا تست زدی\n`
     }
 
-    await ctx.replyWithHTML(reply)
+    await ctx.replyWithHTML(reply)*/
 })
 
 bot.command('need_to_talk', (ctx) => ctx.replyWithHTML("من همیشه هستم، همین الان بهم پیام بده که مشکلو حل کنیم🧡\n@vistateam_admin"))

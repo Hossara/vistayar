@@ -29,7 +29,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           build-args: |
-            "FIREBASE_ADMIN_DATABASE=${{ secrets.FIREBASE_ADMIN_DATABASE }}"
+            "SUPABASE_SERVER=${{ secrets.SUPABASE_SERVER }}"
+            "SUPABASE_SECRET=${{ secrets.SUPABASE_SECRET }}"
             "REDIS_SERVER=${{ secrets.REDIS_SERVER }}"
             "BOT_TOKEN=${{ secrets.BOT_TOKEN }}"
           context: .

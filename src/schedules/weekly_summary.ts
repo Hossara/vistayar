@@ -1,13 +1,15 @@
-import {deleteAllGoals, deleteGoal, findAllGoals} from "@/services/goal.service.ts"
-import {goalConverter} from "@/schemas/Goal.ts"
+import {AllGoalWithReport, deleteAllGoals, deleteGoal, findAllGoalsWithReports} from "@/services/goal.service.ts"
 import {findUserById} from "@/services/user.service.ts"
 import {iterateRedisKeys} from "@/functions.ts"
 import {bot} from "@app"
+import {Report} from "@/schemas/Goal.ts";
 
 export const weekly_summary_schedule = async () => {
-    const goals = await findAllGoals()
+    const {data, error} = await findAllGoalsWithReports()
 
-    if (!goals || goals.empty) {
+    const goals: AllGoalWithReport = data
+
+    if (!goals || error) {
         console.log("No goals found.")
         return
     }
@@ -22,21 +24,21 @@ export const weekly_summary_schedule = async () => {
         score?: number
     }>()
 
-    for (const goalsKey of goals.docs) {
-        const doc = goalConverter.fromFirestore(goalsKey)
+    for (const goalsKey of goals) {
 
-        const {data: user, error}  = await findUserById(doc.getId())
+        const {data: user, error}  = await findUserById(goalsKey.id)
 
 
         if (!user || error) {
             console.log(error)
 
-            await deleteGoal(doc.getId())
+            await deleteGoal(goalsKey.id)
 
             continue
         }
 
-        const reports = Object.values(doc.reports).filter(Boolean)
+        // ToDo
+        /*const reports = Object.values(goalsKey.).filter(Boolean) as Report[]
 
         const total_read_time = reports.reduce((acc, obj) => acc + obj.reading_time, 0)
         const total_test_count = reports.reduce((acc, obj) => acc + obj.test_count, 0)
@@ -45,7 +47,7 @@ export const weekly_summary_schedule = async () => {
             full_name: `${user.first_name} ${user.last_name}`,
             total_read_time, total_test_count, goal_test_count: doc.test_count, goal_read_time: doc.reading_time,
             success: total_read_time >= doc.reading_time && total_test_count >= doc.test_count
-        })
+        })*/
     }
 
     // Filter users with successful goal

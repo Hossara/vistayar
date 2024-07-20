@@ -1,5 +1,5 @@
 import {Composer, Scenes} from "telegraf"
-import {getInputText, redisClient, supabase} from "@app"
+import {getInputText, redisClient} from "@app"
 import {searchByPhoneAndPassword} from "@/services/user.service.ts"
 import {findGoalByUser} from "@/services/goal.service.ts"
 import {checkPhoneNumber} from "@/functions.ts"
@@ -14,8 +14,6 @@ export type LoginContext = Scenes.WizardContext<LoginSession>
 // Scene registration
 export const loginScene = new Scenes.WizardScene<LoginContext>('login',
     async (ctx) => {
-        const users = await supabase.from("users").select("*")
-        console.log(users.data)
         await ctx.reply("برای ورود به بات، شماره تلفن خودت رو وارد کن:")
         return ctx.wizard.next()
     },

@@ -7,7 +7,7 @@ import {goalScene} from "@/scenes/goal.ts"
 import cron from "node-cron"
 import moment from "moment"
 import {findGoalByUser, findGoalWithReportByUser, GoalWithReport} from "@/services/goal.service.ts"
-import {extractNonNullReports, Reports, Report} from "@/schemas/Goal.ts"
+import {extractNonNullReports, Reports} from "@/schemas/Goal.ts"
 import {insert_report_schedules} from "@/schedules/insert_report.ts"
 import {weekly_summary_schedule} from "@/schedules/weekly_summary.ts"
 import {days, isRedisDataExists} from "@/functions.ts"
@@ -105,15 +105,16 @@ bot.command('where_am_i', async (ctx: CommandContext) => {
     if (!goal.reports) return ctx.reply("هنوز گذارشی ثبت نکردی!")
 
     const reports = extractNonNullReports(goal.reports)
+    const report_values = Object.values(reports)
 
-    const total_read_time = reports.reduce((acc, obj) => acc + obj.reading_time, 0)
-    const total_test_count = reports.reduce((acc, obj) => acc + obj.test_count, 0)
+    const total_read_time = report_values.reduce((acc, obj) => acc + obj.reading_time, 0)
+    const total_test_count = report_values.reduce((acc, obj) => acc + obj.test_count, 0)
 
     let reply = `هدف تو برای این هفته این بوده که ${goal.reading_time} دقیقه درس بخونی و ${goal.test_count} تا تست بزنی؛\n\nتا اینجا، ${total_read_time} دقیقه خوندی و ${total_test_count} تا تست زدی👀\n\n`
 
-    for (const day in goal.reports) {
-        const report = goal.reports[day as keyof Reports] as Report
-        if (report) reply += `${days[day]}: ${report.reading_time} دقیقه مطالعه داشتی و ${report.test_count} تا تست زدی\n`
+    for (const report of Object.keys(reports)) {
+        const report_data = reports[report]
+        if (report) reply += `${days[report]}: ${report_data.reading_time} دقیقه مطالعه داشتی و ${report_data.test_count} تا تست زدی\n`
     }
 
     await ctx.replyWithHTML(reply)

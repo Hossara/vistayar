@@ -106,7 +106,7 @@ export const goalScene = new Scenes.WizardScene<GoalContext>('goal',
                 await ctx.reply("گزارش امروزت ثبت شد، خسته نباشی!")
             }
             else {
-                if (session.state.is_update) await updateGoal(user_cache.id, {test_count: session.test_count, time: session.time}) // ToDO
+                if (session.state.is_update) await updateGoal(user_cache.id, {test_count: session.test_count, reading_time: session.time})
                 else {
                     const {error} = await insertGoal(user_cache.id, session.test_count, session.time)
 

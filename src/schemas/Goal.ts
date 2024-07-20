@@ -1,5 +1,3 @@
-import {QueryData} from "@supabase/supabase-js";
-
 export type Report = {
     test_count: number
     reading_time: number
@@ -15,16 +13,16 @@ export type Reports = {
     friday?: Report | null
 }
 
-export const extractNonNullReports = (queryResult: any): (Report | null)[] => {
+export const extractNonNullReports = (queryResult: any): {[key: string]: Report } => {
     const days = ['saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as const;
 
-    const nonNullReports: (Report | null)[] = [];
+    const nonNullReports = {} as {[key: string]: Report }
 
     for (const day of days) {
         if (queryResult[day] !== null && queryResult[day] !== undefined) {
-            nonNullReports.push(queryResult[day]);
+            nonNullReports[day] = queryResult[day]
         }
     }
 
-    return nonNullReports;
+    return nonNullReports
 }

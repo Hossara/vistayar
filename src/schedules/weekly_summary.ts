@@ -2,7 +2,7 @@ import {AllGoalWithReport, deleteAllGoals, deleteGoal, findAllGoalsWithReports} 
 import {findUserById} from "@/services/user.service.ts"
 import {iterateRedisKeys} from "@/functions.ts"
 import {bot} from "@app"
-import {Report} from "@/schemas/Goal.ts";
+import {extractNonNullReports} from "@/schemas/Goal.ts"
 
 export const weekly_summary_schedule = async () => {
     const {data, error} = await findAllGoalsWithReports()
@@ -37,17 +37,17 @@ export const weekly_summary_schedule = async () => {
             continue
         }
 
-        // ToDo
-        /*const reports = Object.values(goalsKey.).filter(Boolean) as Report[]
+        const reports = extractNonNullReports(goalsKey.reports)
+        const report_values = Object.values(reports)
 
-        const total_read_time = reports.reduce((acc, obj) => acc + obj.reading_time, 0)
-        const total_test_count = reports.reduce((acc, obj) => acc + obj.test_count, 0)
+        const total_read_time = report_values.reduce((acc, obj) => acc + obj.reading_time, 0)
+        const total_test_count = report_values.reduce((acc, obj) => acc + obj.test_count, 0)
 
-        scores.set(doc.getId(), {
+        scores.set(user.id, {
             full_name: `${user.first_name} ${user.last_name}`,
-            total_read_time, total_test_count, goal_test_count: doc.test_count, goal_read_time: doc.reading_time,
-            success: total_read_time >= doc.reading_time && total_test_count >= doc.test_count
-        })*/
+            total_read_time, total_test_count, goal_test_count: goalsKey.test_count, goal_read_time: goalsKey.reading_time,
+            success: total_read_time >= goalsKey.reading_time && total_test_count >= goalsKey.test_count
+        })
     }
 
     // Filter users with successful goal

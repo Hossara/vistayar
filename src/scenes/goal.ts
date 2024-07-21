@@ -3,7 +3,7 @@ import {getInputText, redisClient, regexes} from "@app"
 import {insertGoal, updateGoal} from "@/services/goal.service.ts"
 import {Reports} from "@/schemas/Goal.ts"
 import moment from "moment/moment"
-import {insertReportByUser} from "@/services/report.service.ts"
+import {findReportByUser, insertReportByUser, updateReportByUser} from "@/services/report.service.ts"
 
 export interface GoalSession extends Scenes.WizardSessionData {
     time: number,
@@ -90,18 +90,33 @@ export const goalScene = new Scenes.WizardScene<GoalContext>('goal',
                     reading_time: session.time
                 }
 
-                const {data, error} = await insertReportByUser(user_cache.id, report)
+                const {data: report_data, error: report_data_error} = await findReportByUser(user_cache.id)
 
-                if (!data || error) {
-                    console.log(error)
-                    await ctx.reply("خطایی هنگام ثبت گذارش رخ داد!")
+                if (!report_data || report_data_error) {
+                    const {data, error} = await insertReportByUser(user_cache.id, report)
 
-                    ctx.wizard.selectStep(0)
-                    ctx.scene.reset()
-                    return ctx.scene.leave()
+                    if (!data || error) {
+                        console.log(error)
+                        await ctx.reply("خطایی هنگام ثبت گذارش رخ داد!")
+
+                        ctx.wizard.selectStep(0)
+                        ctx.scene.reset()
+                        return ctx.scene.leave()
+                    }
+
+                    await updateGoal(user_cache.id, {reports: data.id})
                 }
+                else {
+                    const {error: update_data_error} = await updateReportByUser(user_cache.id, report)
 
-                await updateGoal(user_cache.id, {reports: data.id})
+                    if (update_data_error) {
+                        await ctx.reply("خطایی هنگام ثبت گذارش رخ داد!")
+
+                        ctx.wizard.selectStep(0)
+                        ctx.scene.reset()
+                        return ctx.scene.leave()
+                    }
+                }
 
                 await ctx.reply("گزارش امروزت ثبت شد، خسته نباشی!")
             }

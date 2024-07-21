@@ -28,7 +28,6 @@ export const weekly_summary_schedule = async () => {
 
         const {data: user, error}  = await findUserById(goalsKey.id)
 
-
         if (!user || error) {
             console.log(error)
 

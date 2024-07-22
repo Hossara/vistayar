@@ -12,6 +12,7 @@ import {insert_report_schedules} from "@/schedules/insert_report.ts"
 import {weekly_summary_schedule} from "@/schedules/weekly_summary.ts"
 import {days, isRedisDataExists} from "@/functions.ts"
 import {smtaScene} from "@/scenes/send_message_to_all.ts"
+import {updateProfileDetailsScene} from "@/scenes/profile_detail.ts"
 
 const LOGIN_ERR = "هنوز وارد حسابت نشدی! روی /login کلیک کن تا وارد حسابت شو."
 
@@ -25,7 +26,7 @@ bot.start(async (ctx) => {
 `)
 })
 
-const stage = new Scenes.Stage<WizardContext>([loginScene, goalScene, smtaScene])
+const stage = new Scenes.Stage<WizardContext>([loginScene, goalScene, smtaScene, updateProfileDetailsScene])
 
 bot.use(session())
 bot.use(stage.middleware())
@@ -142,6 +143,8 @@ bot.command('send_message', async (ctx: CommandContext) => {
 
     if (user_query.role === "ADMIN") await ctx.scene.enter("smta")
 })
+
+bot.catch(err => console.log("Error happened", err))
 
 bot.launch()
 

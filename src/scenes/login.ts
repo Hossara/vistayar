@@ -24,7 +24,7 @@ export const loginScene = new Scenes.WizardScene<LoginContext>('login',
             return Composer.unwrap(ctx.wizard.step)(ctx, next)
         }
 
-        ctx.scene.session.phone = getInputText(ctx.text)
+        ctx.scene.session.phone = getInputText(ctx.text ?? "")
         ctx.wizard.next()
         return Composer.unwrap(ctx.wizard.step)(ctx, next)
     },
@@ -39,7 +39,7 @@ export const loginScene = new Scenes.WizardScene<LoginContext>('login',
             return Composer.unwrap(ctx.wizard.step)(ctx, next)
         }
 
-        ctx.scene.session.password = getInputText(ctx.text)
+        ctx.scene.session.password = getInputText(ctx.text ?? "")
 
         ctx.wizard.next()
         return Composer.unwrap(ctx.wizard.step)(ctx, next)

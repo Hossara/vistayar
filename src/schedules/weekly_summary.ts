@@ -62,7 +62,7 @@ export const weekly_summary_schedule = async () => {
         }))
 
     // Iterate on list of users in redis
-    await iterateRedisKeys(async (value: { id: string, username: string, chat_id: string }) => {
+    await iterateRedisKeys(async (value: { id: string, chat_id: string }) => {
         const score = scores.get(value.id)
         const chat_id = value.chat_id.toString()
 

@@ -100,6 +100,7 @@ export type Database = {
                     created_at: string
                     first_name: string | null
                     id: string
+                    is_ban: boolean
                     last_name: string | null
                     password: string | null
                     phone: string | null
@@ -109,6 +110,7 @@ export type Database = {
                     created_at?: string
                     first_name?: string | null
                     id?: string
+                    is_ban?: boolean
                     last_name?: string | null
                     password?: string | null
                     phone?: string | null
@@ -118,6 +120,7 @@ export type Database = {
                     created_at?: string
                     first_name?: string | null
                     id?: string
+                    is_ban?: boolean
                     last_name?: string | null
                     password?: string | null
                     phone?: string | null

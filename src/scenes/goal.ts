@@ -27,7 +27,7 @@ export const goalScene = new Scenes.WizardScene<GoalContext>('goal',
         return ctx.wizard.next()
     },
     async (ctx, next) => {
-        const text = getInputText(ctx.text)
+        const text = getInputText(ctx.text ?? "")
         const text_match = text.match(regexes.time)
 
         if (text === "" || !text_match) {
@@ -59,7 +59,7 @@ export const goalScene = new Scenes.WizardScene<GoalContext>('goal',
         return ctx.wizard.next()
     },
     async (ctx, next) => {
-        const text = getInputText(ctx.text)
+        const text = getInputText(ctx.text ?? "")
         const text_match = text.match(regexes.number)
 
         if (text === "" || !text_match) {

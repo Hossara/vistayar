@@ -150,7 +150,7 @@ bot.launch()
 
 const default_cron_config = {scheduled: true, timezone: "Asia/Tehran"}
 
-//cron.schedule("15 20 0 * * *", daily_summary_schedule, default_cron_config)
+// cron.schedule("15 20 0 * * *", daily_summary_schedule, default_cron_config)
 
 cron.schedule("0 23 * * *", insert_report_schedules, default_cron_config)
 

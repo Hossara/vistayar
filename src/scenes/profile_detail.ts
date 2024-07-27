@@ -1,6 +1,7 @@
 import {Composer, Scenes} from "telegraf"
 import {getInputText, redisClient} from "@app"
 import {updateProfileDetail} from "@/services/user.service.ts"
+import {findGoalByUser} from "@/services/goal.service.ts"
 
 interface UpdateProfileDetailsSession extends Scenes.WizardSessionData {
     first_name: string
@@ -22,7 +23,7 @@ export const updateProfileDetailsScene = new Scenes.WizardScene<UpdateProfileDet
             return Composer.unwrap(ctx.wizard.step)(ctx, next)
         }
 
-        ctx.scene.session.first_name = getInputText(ctx.text)
+        ctx.scene.session.first_name = getInputText(ctx.text ?? "")
         ctx.wizard.next()
         return Composer.unwrap(ctx.wizard.step)(ctx, next)
     },
@@ -37,7 +38,7 @@ export const updateProfileDetailsScene = new Scenes.WizardScene<UpdateProfileDet
             return Composer.unwrap(ctx.wizard.step)(ctx, next)
         }
 
-        ctx.scene.session.last_name = getInputText(ctx.text)
+        ctx.scene.session.last_name = getInputText(ctx.text ?? "")
 
         ctx.wizard.next()
         return Composer.unwrap(ctx.wizard.step)(ctx, next)
@@ -72,11 +73,17 @@ export const updateProfileDetailsScene = new Scenes.WizardScene<UpdateProfileDet
             return ctx.scene.leave()
         }
 
+        await ctx.reply(`اطلاعات با موفقیت ذخیره شد`)
+
+        await ctx.reply(`${ctx.scene.session.first_name} عزیز، خوش اومدی!`)
+
         ctx.wizard.selectStep(0)
         ctx.scene.reset()
 
-        await ctx.reply(`اطلاعات با موفقیت ذخیره شد`)
-
         await ctx.scene.leave()
+
+        const {data: goal, error: error_find} = await findGoalByUser(user_cache.id)
+
+        if (!goal || error_find) await ctx.scene.enter("goal")
     },
 )

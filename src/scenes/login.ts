@@ -72,19 +72,22 @@ export const loginScene = new Scenes.WizardScene<LoginContext>('login',
         ctx.wizard.selectStep(0)
         ctx.scene.reset()
 
-       /* if (user.first_name === "" || user.last_name === "") {
-            await ctx.reply("لطفا برای تکمیل اطلاعات خود نام کاربری و رمز عبور خود را وارد کنید")
+        if (user.first_name === "" || user.last_name === "" || !user.first_name || !user.last_name) {
+            await ctx.reply("لطفا برای تکمیل اطلاعات خود نام و نام خانوادگی خود را وارد کنید")
+
+            await ctx.scene.leave()
 
             await ctx.scene.enter("updateProfileDetailsScene")
         }
-*/
-        await ctx.reply(`${user.first_name} عزیز، خوش اومدی!`)
+        else {
+            await ctx.reply(`${user.first_name} عزیز، خوش اومدی!`)
 
-        await ctx.scene.leave()
+            await ctx.scene.leave()
 
-        const {data: goal, error: error_find} = await findGoalByUser(user.id)
+            const {data: goal, error: error_find} = await findGoalByUser(user.id)
 
-        if (!goal || error_find) await ctx.scene.enter("goal")
+            if (!goal || error_find) await ctx.scene.enter("goal")
+        }
     },
 )
 

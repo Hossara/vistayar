@@ -144,7 +144,9 @@ bot.command('send_message', async (ctx: CommandContext) => {
     if (user_query.role === "ADMIN") await ctx.scene.enter("smta")
 })
 
-bot.catch(err => console.log("Error happened", err))
+bot.catch(err => {
+    console.log("Error happened", err)
+})
 
 bot.launch()
 

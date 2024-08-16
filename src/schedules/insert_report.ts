@@ -7,7 +7,7 @@ export const insert_report_schedules = async () => {
             await bot.telegram.sendMessage(value.chat_id.toString(), "سلام! شب بخیر. لطفا گزارش روزانه خود را از طریق دستور /insert_report ثبت کنید.")
         }
         catch (e) {
-            console.error(`Error while sending message to user ${value.id}. chat: ${value.chat_id.toString()}`)
+            console.error(`[Daily Report] Error while sending message to user ${value.id}. chat: ${value.chat_id.toString()}`)
         }
     })
 }

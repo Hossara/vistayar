@@ -51,6 +51,48 @@ export type Database = {
                     },
                 ]
             }
+            goals_duplicate: {
+                Row: {
+                    created_at: string
+                    id: string
+                    reading_time: number | null
+                    reports: string | null
+                    test_count: number | null
+                    user: string
+                }
+                Insert: {
+                    created_at?: string
+                    id?: string
+                    reading_time?: number | null
+                    reports?: string | null
+                    test_count?: number | null
+                    user?: string
+                }
+                Update: {
+                    created_at?: string
+                    id?: string
+                    reading_time?: number | null
+                    reports?: string | null
+                    test_count?: number | null
+                    user?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "goals_duplicate_reports_fkey"
+                        columns: ["reports"]
+                        isOneToOne: false
+                        referencedRelation: "reports"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "goals_duplicate_user_fkey"
+                        columns: ["user"]
+                        isOneToOne: false
+                        referencedRelation: "users"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            }
             reports: {
                 Row: {
                     friday: Json | null
@@ -88,6 +130,50 @@ export type Database = {
                 Relationships: [
                     {
                         foreignKeyName: "reports_user_fkey"
+                        columns: ["user"]
+                        isOneToOne: false
+                        referencedRelation: "users"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            }
+            reports_duplicate: {
+                Row: {
+                    friday: Json | null
+                    id: string
+                    monday: Json | null
+                    saturday: Json | null
+                    sunday: Json | null
+                    thursday: Json | null
+                    tuesday: Json | null
+                    user: string
+                    wednesday: Json | null
+                }
+                Insert: {
+                    friday?: Json | null
+                    id?: string
+                    monday?: Json | null
+                    saturday?: Json | null
+                    sunday?: Json | null
+                    thursday?: Json | null
+                    tuesday?: Json | null
+                    user?: string
+                    wednesday?: Json | null
+                }
+                Update: {
+                    friday?: Json | null
+                    id?: string
+                    monday?: Json | null
+                    saturday?: Json | null
+                    sunday?: Json | null
+                    thursday?: Json | null
+                    tuesday?: Json | null
+                    user?: string
+                    wednesday?: Json | null
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "reports_duplicate_user_fkey"
                         columns: ["user"]
                         isOneToOne: false
                         referencedRelation: "users"
@@ -133,7 +219,10 @@ export type Database = {
             [_ in never]: never
         }
         Functions: {
-            [_ in never]: never
+            weekly: {
+                Args: Record<PropertyKey, never>
+                Returns: undefined
+            }
         }
         Enums: {
             [_ in never]: never

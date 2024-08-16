@@ -1,72 +1,53 @@
 import {AllGoalWithReport, deleteAllGoals, deleteGoal, findAllGoalsWithReports} from "@/services/goal.service.ts"
 import {findUserById} from "@/services/user.service.ts"
 import {iterateRedisKeys} from "@/functions.ts"
-import {bot} from "@app"
+import {bot, supabase} from "@app"
 import {extractNonNullReports} from "@/schemas/Goal.ts"
 
 export const weekly_summary_schedule = async () => {
-    const {data, error} = await findAllGoalsWithReports()
+    const { data, error } = await supabase.rpc('weekly')
 
-    const goals: AllGoalWithReport = data
+    if (error) return console.error("[Weekly report] Error while executing weekly summary", error)
 
-    if (!goals || error) {
-        console.log("No goals found.")
-        return
-    }
-
-    const scores = new Map<string, {
-        full_name: string,
-        success: boolean
-        total_read_time: number
-        total_test_count: number,
-        goal_read_time: number
+    type WEEK_DATA = {
+        id: string
+        phone: string,
         goal_test_count: number,
-        score?: number
-    }>()
-
-    for (const goalsKey of goals) {
-
-        const {data: user, error}  = await findUserById(goalsKey.id)
-
-        if (!user || error) {
-            console.log(error)
-
-            await deleteGoal(goalsKey.id)
-
-            continue
-        }
-
-        const reports = extractNonNullReports(goalsKey.reports)
-        const report_values = Object.values(reports)
-
-        const total_read_time = report_values.reduce((acc, obj) => acc + obj.reading_time, 0)
-        const total_test_count = report_values.reduce((acc, obj) => acc + obj.test_count, 0)
-
-        scores.set(user.id, {
-            full_name: `${user.first_name} ${user.last_name}`,
-            total_read_time, total_test_count, goal_test_count: goalsKey.test_count, goal_read_time: goalsKey.reading_time,
-            success: total_read_time >= goalsKey.reading_time && total_test_count >= goalsKey.test_count
-        })
+        total_test_count: number,
+        goal_reading_time: number,
+        total_reading_time: number
     }
 
-    // Filter users with successful goal
-    // Sort by total read time and total test count with total read time priority
-    // Slice top 5
-    const top5 = new Map([...scores.entries()]
-        .filter((value) => value[1].success)
-        .sort((a, b) => a[1].total_read_time - b[1].total_read_time || a[1].total_test_count - b[1].total_test_count)
-        .slice(0, 5)
-        .map((value, index) => {
-            value[1].score = index + 1
-            return value
-        }))
+    //const weekly_data = new Map<string, WEEK_DATA>
+    //const weekly_data = new Map<string, WEEK_DATA & {success: boolean}>
+    const weekly_pure: WEEK_DATA[] = data ?? [] as WEEK_DATA[]
+
+    //weekly_pure.map((value) => weekly_data.set(value.id, value))
 
     // Iterate on list of users in redis
     await iterateRedisKeys(async (value: { id: string, chat_id: string }) => {
-        const score = scores.get(value.id)
+        const d = weekly_pure.findIndex((d) => d.id === value.id)
+
+        if (d === -1) return
+
+        const score = weekly_pure[d]
+
         const chat_id = value.chat_id.toString()
 
-        if (score.success) {
+        let top5_text = `یه خبر خوب! با رتبه ${d} جزو ۵ نفر برتر هفته شدی!\n`
+
+        top5_text += "رتبه ۵ نفر اول: \n"
+
+        for (let i = 0; i < weekly_pure.length; i++) {
+            top5_text += `${i + 1}) \n ${weekly_pure[i].total_test_count} تست - ${weekly_pure[i].total_reading_time} دقیقه مطالعه \n`
+        }
+
+        await bot.telegram.sendMessage(chat_id, top5_text, {
+            parse_mode: "HTML"
+        })
+
+
+        /*if (score.success) {
             await bot.telegram.sendMessage(chat_id, `دمت گرم ${score.full_name.split(" ")[0]}! یه قدمِ دیگه نزدیک‌تر به هدفت:) خسته‌ی این هفته نباشی. برنامه‌تو آماده کن که روزای خوب توی راهه🔥`)
 
             if (top5.has(value.id)) {
@@ -88,12 +69,12 @@ export const weekly_summary_schedule = async () => {
             }
         }
         else await bot.telegram.sendMessage(chat_id, "با اینکه این هفته اونی که میخواستی نشد، ولی هنوز وقت هست واسه ساختن و نجات دادنِ هدفات؛ به حای سرزنش، دستِ خودتو بگیر و بلندش کن واسه جنگیدن برای زندگی🧡")
-
-        await bot.telegram.sendMessage(chat_id, `این هفته ${score.total_read_time} دقیقه مطالعه کردی و ${score.total_test_count} تا تست زدی!`, {
+*/
+/*        await bot.telegram.sendMessage(chat_id, `این هفته ${score.total_read_time} دقیقه مطالعه کردی و ${score.total_test_count} تا تست زدی!`, {
             parse_mode: "HTML"
         })
         await bot.telegram.sendMessage(chat_id, `هدفی که برای این هفته تعیین کردی ${score.goal_read_time} دقیقه مطالعه و ${score.goal_test_count} عدد تست بود.`)
 
-        await deleteAllGoals()
+        await deleteAllGoals()*/
     })
 }

@@ -21,7 +21,7 @@
     "socks-proxy-agent": "^8.0.4",
     "telegraf": "^4.16.3",
     "tsconfig-paths": "^4.2.0",
-    "uuid": "^9.0.1"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.4.2",
